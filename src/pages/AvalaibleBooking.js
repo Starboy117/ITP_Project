@@ -3,13 +3,12 @@ import Navbar from "../HomeComponents/Navbar";
 import CopyrightFooter from "../BookingAvailableComponents/CopyrightFooter";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import BookingTicket from "../BookingAvailableComponents/BookingTicket";
 import { BookingTicketsList } from "../BookingAvailableComponents/BookingTicket";
 
 function AvailableBooking() {
   const [court, setCourt] = useState("all");
 
-  // Set default date to today
+  // Default date
   const today = new Date();
   const [date, setDate] = useState(today);
 
@@ -51,7 +50,6 @@ function AvailableBooking() {
               </select>
             </div>
 
-            {/* Date Picker */}
             <div>
               <label htmlFor="date" className="block text-white mb-2">
                 Choose a Date:
@@ -72,29 +70,19 @@ function AvailableBooking() {
               <h2 className="text-lg font-semibold text-white mb-2">
                 Your Selection:
               </h2>
-              {court && (
-                <p>🏟 Court: {court === "all" ? "All Courts" : court}</p>
-              )}
-
+              {court && <p>🏟 Court: {court === "all" ? "All Courts" : court}</p>}
               {date && <p>📅 Date: {date.toDateString()}</p>}
             </div>
           )}
-
-          <div className="mt-8 text-center">
-            <button
-              type="button"
-              className="px-6 py-3 bg-[#0097B2] text-white rounded-lg shadow-md hover:bg-[#007A8F] transition"
-            >
-              Check Availability
-            </button>
-          </div>
         </div>
       </div>
 
       <div className="flex-1 px-6 sm:px-12 lg:px-24 mt-24">
-  <BookingTicketsList selectedDate={date} court={court} />
-</div>
-
+        <BookingTicketsList
+          selectedDate={date}
+          court={court}
+        />
+      </div>
 
       <footer className="p-4 mt-12">
         <CopyrightFooter />
