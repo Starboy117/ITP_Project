@@ -15,22 +15,33 @@ const reservationSchema = new mongoose.Schema({
 
 // Model
 const Reservation = mongoose.model("Reservation", reservationSchema);
-module.exports = { Reservation };
 
-// async function findBookings(courtId, date) {
 
-//   const start = new Date(date);
-//   start.setHours(0,0,0,0);
+async function findBookings(courtName, date) {
+  const inputDate = new Date(date);
+  const start = new Date(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate(), 0, 0, 0);
+  const end   = new Date(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate(), 23, 59, 59);
 
-//   const end = new Date(date);
-//   end.setHours(23,59,59,999);
+  let reservations;
 
-//   const reservations = await Reservation.find({
-//     courtId: courtId,
-//     date: { $gte: start, $lte: end }
-//   });
+  if (courtName === "all") {
+    // All courts
+    reservations = await Reservation.find({
+      date: { $gte: start, $lte: end }
+    });
+  } else {
+    // Specific court
+    reservations = await Reservation.find({
+      courtName: courtName,
+      date: { $gte: start, $lte: end }
+    });
+  }
 
-//   return reservations.map(b => `${b.startTime} - ${b.endTime}`);
-// }
+  // Return array of objects with courtName + slot
+  return reservations.map(b => ({
+    courtName: b.courtName,
+    slot: `${b.startTime} - ${b.endTime}`
+  }));
+}
 
-// module.exports = { Reservation, findBookings };
+module.exports = { Reservation, findBookings };

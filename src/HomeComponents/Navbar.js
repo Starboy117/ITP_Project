@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom"; // ✅ Import Link
 import "../css/Navbar.css";
+import logo1 from "../Images/logo1.png";
 
 function Navbar() {
   return (
@@ -9,8 +10,12 @@ function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Left: Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="text-2xl font-bold text-white">
-              LOGO
+            <Link to="/">
+              <img
+                src={logo1}
+                alt="Logo"
+                className="h-40 w-auto" // 4rem = 64px, bigger logo
+              />
             </Link>
           </div>
 

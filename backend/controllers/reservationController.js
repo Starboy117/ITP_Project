@@ -1,4 +1,5 @@
-const { Reservation } = require("../models/reservationModel");
+const { Reservation, findBookings } = require("../models/reservationModel");
+
 
 async function generateBookingId() {
   const lastReservation = await Reservation.findOne().sort({ bookingId: -1 });
@@ -44,7 +45,7 @@ const addReservation = async (req, res) => {
 };
 
 
-module.exports = { addReservation };
+
 
 
 // const getAllReservations = async (req, res) => {
@@ -58,20 +59,26 @@ module.exports = { addReservation };
 
 
 
-// const checkReservations = async (req, res) => {
-//   const { courtType, date } = req.body;
-//   console.log("Received:", courtType, date)
+const checkReservations = async (req, res) => {
+  let { courtName, date } = req.body;
 
-//   if (!courtType || !date) {
-//     return res.status(400).json({ message: "Missing date or court type" });
-//   }
+  console.log("Received:", courtName, date);
 
-//   try {
-//     const bookings = await findBookings(courtType, date);
-//     res.json({ bookedSlots: bookings });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
+  if (!courtName || !date) {
+    return res.status(400).json({ message: "Missing date or court type" });
+  }
 
+  courtName = courtName.trim(); // ✅ trim spaces
+
+  try {
+    const bookings = await findBookings(courtName, date);
+    res.json({ bookedSlots: bookings });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+module.exports = { addReservation, checkReservations };
 

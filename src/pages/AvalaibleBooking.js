@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../HomeComponents/Navbar";
 import CopyrightFooter from "../BookingAvailableComponents/CopyrightFooter";
 import DatePicker from "react-datepicker";
@@ -7,14 +7,38 @@ import { BookingTicketsList } from "../BookingAvailableComponents/BookingTicket"
 
 function AvailableBooking() {
   const [court, setCourt] = useState("all");
-
-  // Default date
   const today = new Date();
   const [date, setDate] = useState(today);
+  const [bookedSlots, setBookedSlots] = useState([]); // booked slots from backend
 
-  // Limit date selection: today → today + 30 days
   const maxDate = new Date();
   maxDate.setDate(today.getDate() + 30);
+
+  // Fetch booked slots whenever court or date changes
+  useEffect(() => {
+    if (!court || !date) return;
+
+    const fetchBookedSlots = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/reservations/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            courtName: court,
+            date: date.toISOString(), // send as ISO string
+          }),
+        });
+
+        const data = await response.json();
+        // Keep as array of objects {courtName, slot}
+        setBookedSlots(data.bookedSlots);
+      } catch (err) {
+        console.error("Error fetching booked slots:", err);
+      }
+    };
+
+    fetchBookedSlots();
+  }, [court, date]);
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-900">
@@ -77,10 +101,11 @@ function AvailableBooking() {
         </div>
       </div>
 
-      <div className="flex-1 px-6 sm:px-12 lg:px-24 mt-24">
+      <div className="flex-1 px-6 sm:px-12 lg:px-24 mt-12">
         <BookingTicketsList
           selectedDate={date}
           court={court}
+          bookedSlots={bookedSlots} // pass booked slots to BookingTicketsList
         />
       </div>
 

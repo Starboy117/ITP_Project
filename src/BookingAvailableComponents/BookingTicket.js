@@ -20,9 +20,13 @@ const courtConfig = {
   tableTennis: { name: "Table Tennis Room", icon: <FaTableTennis className="text-3xl text-red-400" />, bg: "bg-black", sideBg: "bg-red-900" },
 };
 
-function generateBookingSlots() {
+function generateBookingSlots(selectedDate) {
   const slots = [];
+  const now = new Date();
+  const isToday = selectedDate.toDateString() === now.toDateString();
+
   for (let hour = 7; hour < 25; hour++) {
+    if (isToday && hour <= now.getHours()) continue;
     const start = formatTime(hour);
     const end = formatTime(hour + 1);
     slots.push(`${start} - ${end}`);
@@ -36,7 +40,7 @@ function formatTime(hour) {
   return `${adjustedHour}:00 ${period}`;
 }
 
-const BookingTicket = ({ slot, selectedDate, court }) => {
+const BookingTicket = ({ slot, selectedDate, court, disabled }) => {
   const displayDate = selectedDate.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -52,11 +56,12 @@ const BookingTicket = ({ slot, selectedDate, court }) => {
 
   return (
     <Link
-      to="/booking-details"
-      state={{ slot, selectedDate, court }} // Pass data to Booking Page
+      to={disabled ? "#" : "/booking-details"}
+      state={{ slot, selectedDate, court }}
+      className="relative w-[380px]"
     >
       <div
-        className={`relative flex flex-col sm:flex-row w-[380px] text-white rounded-2xl shadow-lg overflow-hidden transition duration-300 hover:shadow-2xl hover:scale-105 ${courtInfo.bg} h-[160px]`}
+        className={`relative flex flex-col sm:flex-row text-white rounded-2xl shadow-lg overflow-hidden transition duration-300 hover:shadow-2xl hover:scale-105 ${courtInfo.bg} h-[160px]`}
       >
         {/* Left Section */}
         <div className="flex flex-col justify-between gap-2 p-6 flex-1">
@@ -78,27 +83,44 @@ const BookingTicket = ({ slot, selectedDate, court }) => {
           <p className="text-sm font-bold">Booking</p>
           <p className="text-xs text-gray-400">Orion Sports</p>
         </div>
+
+        {/* Watermark if booked */}
+        {disabled && (
+          <div className="absolute inset-0 bg-black bg-opacity-80 flex justify-center items-center rounded-2xl pointer-events-none">
+            <span className="text-4xl font-bold text-red-900 opacity-90 select-none">
+              BOOKED
+            </span>
+          </div>
+        )}
       </div>
     </Link>
   );
 };
 
-export const BookingTicketsList = ({ selectedDate, court }) => {
-  const slots = generateBookingSlots();
+
+export const BookingTicketsList = ({ selectedDate, court, bookedSlots }) => {
+  const slots = generateBookingSlots(selectedDate);
   const allCourts = Object.keys(courtConfig);
   const courtsToRender = court === "all" ? allCourts : [court];
 
   return (
     <div className="flex flex-wrap justify-center gap-6 p-6">
       {slots.map((slot, slotIndex) =>
-        courtsToRender.map((c) => (
-          <BookingTicket
-            key={`${slotIndex}-${c}`}
-            slot={slot}
-            selectedDate={selectedDate}
-            court={c}
-          />
-        ))
+        courtsToRender.map((c) => {
+          const isBooked = bookedSlots.some(
+            (b) => b.courtName === c && b.slot === slot
+          );
+
+          return (
+            <BookingTicket
+              key={`${slotIndex}-${c}`}
+              slot={slot}
+              selectedDate={selectedDate}
+              court={c}
+              disabled={isBooked}
+            />
+          );
+        })
       )}
     </div>
   );

@@ -1,5 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { FaPhone, FaMapMarkerAlt, FaClock, FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
+import logo1 from "../Images/logo2.png"
 
 function Footer() {
   return (
@@ -8,12 +10,14 @@ function Footer() {
         
         {/* Logo */}
         <div>
-          <a href="#" className="text-4xl font-bold text-white">
-            LOGO
-          </a>
-          <p className="text-gray-400 mt-3 text-sm leading-relaxed">
-            Your tagline or short description goes here.
-          </p>
+          <Link to="/">
+              <img
+                src={logo1}
+                alt="Logo"
+                className="w-64 w-auto" // 4rem = 64px, bigger logo
+              />
+            </Link>
+          
         </div>
 
         {/* Main Links */}
