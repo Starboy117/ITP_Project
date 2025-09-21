@@ -1,9 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import Sidebar from '../staffPageComponents/sideBar'; // the Sidebar component we'll include below
 import { CalendarDaysIcon, CreditCardIcon, BuildingOfficeIcon, UsersIcon, BarChartIcon } from '@heroicons/react/24/outline';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
+
+  const [bookings, setBookings] = useState([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+
+
+  useEffect(() => {
+    const fetchTodayBookings = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/reservations/todayReservations",
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        const data = await response.json();
+        console.log("Fetched data:", data);
+        setBookings(data.bookings || []);
+        setCount(data.count || 0);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchTodayBookings();
+  }, []);
+
+
+
   const [stats] = React.useState({
     todayBookings: 15,
     weeklyRevenue: 12500,
@@ -81,11 +115,11 @@ const Dashboard = () => {
           
         </div>
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Today's Bookings" value={stats.todayBookings} icon={CalendarDaysIcon} color="text-blue-400" change={12} />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard title="Today's Bookings" value={count} icon={CalendarDaysIcon} color="text-blue-400" change={12} />
           <StatCard title="Weekly Revenue" value={`$${stats.weeklyRevenue.toLocaleString()}`} icon={CreditCardIcon} color="text-green-400" change={8} />
           <StatCard title="Active Courts" value={`${stats.activeCourts}/10`} icon={BuildingOfficeIcon} color="text-amber-400" change={0} />
-          <StatCard title="Total Customers" value={stats.totalCustomers} icon={UsersIcon} color="text-purple-400" change={15} />
+      
         </div>
 
         {/* Charts Row */}
@@ -126,24 +160,24 @@ const Dashboard = () => {
         {/* Recent Bookings Table */}
         <div className="bg-neutral-800 shadow overflow-hidden sm:rounded-md">
           <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-white">Recent Bookings</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-400">Latest booking activities</p>
+            <h3 className="text-lg leading-6 font-medium text-white">Today's Bookings</h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-400">Booking activities</p>
           </div>
           <ul className="divide-y divide-gray-700">
-            {recentBookings.map((booking) => (
+            {bookings.map((booking) => (
               <li key={booking.id} className="px-4 py-4 hover:bg-neutral-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <div className="h-10 w-10 rounded-full bg-neutral-600 flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-200">
-                          {booking.customer.split(' ').map(n => n[0]).join('')}
+                          {booking.name.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-white">{booking.customer}</div>
-                      <div className="text-sm text-gray-400">{booking.court} • {booking.time}</div>
+                      <div className="text-sm font-medium text-white">{booking.name}</div>
+                      <div className="text-sm text-gray-400">{booking.courtName} • {booking.startTime}</div>
                     </div>
                   </div>
                   <div className="flex items-center">

@@ -16,6 +16,9 @@ app.get('/api/health', (req, res) => {
 const reservationRoutes = require("./routes/reservationRoute");
 app.use("/api/reservations", reservationRoutes);
 
+const courtRoutes = require("./routes/courtRoute");
+app.use("/api/courts",courtRoutes);
+
 
 // connect to MongoDB and start server
 mongoose.connect(process.env.MONGODB_URI)
