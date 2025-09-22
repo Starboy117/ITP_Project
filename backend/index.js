@@ -12,15 +12,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend running', time: new Date().toISOString() });
 });
 
-// register reservation routes BEFORE starting server
+
 const reservationRoutes = require("./routes/reservationRoute");
 app.use("/api/reservations", reservationRoutes);
 
 const courtRoutes = require("./routes/courtRoute");
 app.use("/api/courts",courtRoutes);
 
+const statsRoutes = require("./routes/statRoute");
+app.use("/api/stats",statsRoutes);
 
-// connect to MongoDB and start server
+
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     app.listen(process.env.PORT || 5000, () => {

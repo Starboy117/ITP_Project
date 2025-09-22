@@ -21,9 +21,9 @@ function App() {
         <Route path="/booking-success" element={<BookingSuccess />} />
         <Route path="/ReceptionistDashboard" element={<RDashboard />} />
         <Route path="/ReceptionistDashboard/bookings" element={<Bookings />} />
-        <Route path="/ReceptionistDashboard/reports" element={<Reports />} />
+        <Route path="/ReceptionistDashboard/reportss" element={<Reports />} />
         <Route path="/ReceptionistDashboard/courts" element={<Courts />} />
-        <Route path="/ReceptionistDashboard/payments" element={<Payments />} />
+        <Route path="/ReceptionistDashboard/paymentss" element={<Payments />} />
         
       </Routes>
     </Router>

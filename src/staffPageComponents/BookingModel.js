@@ -59,7 +59,7 @@ const BookingModal = ({ booking, onClose, onSave }) => {
     });
   };
 
-  // ✅ Validation
+ 
   const validateForm = () => {
   const newErrors = {};
 

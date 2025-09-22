@@ -6,20 +6,20 @@ import CopyrightFooter from "../BookingAvailableComponents/CopyrightFooter";
 const BookingDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { slot, selectedDate, court } = location.state || {}; // only exists if navigated from booking-available
+  const { slot, selectedDate, courtName, courtType } = location.state || {}; // ✅ use correct values
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({}); // ✅ track validation errors
+  const [errors, setErrors] = useState({});
 
-  // ⚠ Prevent access if user tries to go here directly or via back button
+  // ✅ Prevent access if not navigated properly
   useEffect(() => {
-    if (!slot || !selectedDate || !court) {
+    if (!slot || !selectedDate || !courtName || !courtType) {
       navigate("/available", { replace: true });
     }
-  }, [slot, selectedDate, court, navigate]);
+  }, [slot, selectedDate, courtName, courtType, navigate]);
 
   // ✅ Validate form inputs
   const validateForm = () => {
@@ -46,7 +46,7 @@ const BookingDetails = () => {
       setErrors(validationErrors);
       return;
     }
-    setErrors({}); // clear old errors
+    setErrors({});
 
     setLoading(true);
     const [startTime, endTime] = slot.split(" - ");
@@ -55,17 +55,18 @@ const BookingDetails = () => {
       name,
       phone: Number(phone),
       email,
-      courtName: court,
+      courtName, 
+      courtType, 
       date: selectedDate,
       startTime,
-      endTime
+      endTime,
     };
 
     try {
       const res = await fetch("http://localhost:5000/api/reservations/addBookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       });
 
       const result = await res.json();
@@ -73,15 +74,16 @@ const BookingDetails = () => {
         navigate("/booking-success", {
           state: {
             bookingId: result.bookingId,
-            court,
+            courtName, 
+            courtType, 
             date: selectedDate,
             slot,
             name,
             email,
             phone,
-            status: result.status
+            status: result.status,
           },
-          replace: true // replace history to prevent going back to form
+          replace: true,
         });
       } else {
         setErrors({ general: result.error });
@@ -106,7 +108,18 @@ const BookingDetails = () => {
               <label className="block mb-2 font-semibold">Court</label>
               <input
                 type="text"
-                value={court}
+                value={courtName}
+                disabled
+                className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
+              />
+            </div>
+
+            {/* Court Type */}
+            <div>
+              <label className="block mb-2 font-semibold">Court Type</label>
+              <input
+                type="text"
+                value={courtType}
                 disabled
                 className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
               />

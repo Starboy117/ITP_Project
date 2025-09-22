@@ -97,7 +97,7 @@ const BookingConfirmationPDF = ({ booking }) => {
           </Text>
           <Text>
             <Text style={styles.fieldLabel}>Court:</Text>
-            <Text style={styles.fieldValue}> {booking.court}</Text>
+            <Text style={styles.fieldValue}> {booking.courtName}</Text>
           </Text>
           <Text>
             <Text style={styles.fieldLabel}>Date:</Text>

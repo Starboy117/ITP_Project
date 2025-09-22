@@ -13,7 +13,7 @@ const CourtModal = ({ court, onClose, onSave }) => {
     status: "Available",
   });
 
-  const [errors, setErrors] = useState({}); // ✅ track errors
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (court) {
@@ -36,7 +36,7 @@ const CourtModal = ({ court, onClose, onSave }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Validation
+  
   const validateForm = () => {
     const newErrors = {};
 
@@ -108,13 +108,10 @@ const CourtModal = ({ court, onClose, onSave }) => {
             >
               <option value="">Select Court Type</option>
               {[
-                "futsal1",
-                "futsal2",
+                "football",
                 "volleyball",
-                "beach",
-                "badmintonFamily",
-                "badminton1",
-                "badminton2",
+                "beachVolley",
+                "badminton",
                 "basketball",
                 "tableTennis",
               ].map((type) => (
@@ -206,8 +203,6 @@ const CourtModal = ({ court, onClose, onSave }) => {
             className="w-full p-2 rounded bg-neutral-800 text-white"
           >
             <option value="Available">Available</option>
-            <option value="Occupied">Occupied</option>
-            <option value="Reserved">Reserved</option>
             <option value="Maintenance">Maintenance</option>
           </select>
         </div>

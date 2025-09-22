@@ -33,9 +33,7 @@ const Sidebar = () => {
           );
         })}
       </nav>
-      <div className="mt-auto text-gray-400 text-sm">
-        © 2025 Orion Sports
-      </div>
+      
     </div>
   );
 };

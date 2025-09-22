@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   FaFutbol,
   FaVolleyballBall,
@@ -6,20 +7,18 @@ import {
   FaBasketballBall,
 } from "react-icons/fa";
 import { GiShuttlecock, GiBeachBall } from "react-icons/gi";
-import { Link } from "react-router-dom";
 
+// Court configuration
 const courtConfig = {
-  futsal1: { name: "Futsal Court 1", icon: <FaFutbol className="text-3xl text-green-600" />, bg: "bg-black", sideBg: "bg-green-950" },
-  futsal2: { name: "Futsal Court 2", icon: <FaFutbol className="text-3xl text-green-600" />, bg: "bg-black", sideBg: "bg-green-950" },
-  volleyball: { name: "Volleyball Court", icon: <FaVolleyballBall className="text-3xl text-yellow-400" />, bg: "bg-black", sideBg: "bg-yellow-700" },
-  beach: { name: "Beach Volleyball Court", icon: <GiBeachBall className="text-3xl text-cyan-700" />, bg: "bg-black", sideBg: "bg-cyan-700" },
-  badmintonFamily: { name: "Badminton Family Court", icon: <GiShuttlecock className="text-3xl text-blue-300" />, bg: "bg-black", sideBg: "bg-blue-900" },
-  badminton1: { name: "Badminton Court 1", icon: <GiShuttlecock className="text-3xl text-blue-400" />, bg: "bg-black", sideBg: "bg-blue-900" },
-  badminton2: { name: "Badminton Court 2", icon: <GiShuttlecock className="text-3xl text-blue-500" />, bg: "bg-black", sideBg: "bg-blue-900" },
-  basketball: { name: "Basketball Court", icon: <FaBasketballBall className="text-3xl text-orange-500" />, bg: "bg-black", sideBg: "bg-orange-900" },
-  tableTennis: { name: "Table Tennis Room", icon: <FaTableTennis className="text-3xl text-red-400" />, bg: "bg-black", sideBg: "bg-red-900" },
+football: { icon: <FaFutbol className="text-3xl text-green-600" />, bg: "bg-black", sideBg: "bg-green-950" },
+volleyball: { icon: <FaVolleyballBall className="text-3xl text-yellow-400" />, bg: "bg-black", sideBg: "bg-yellow-700" },
+beachVolley: {  icon: <GiBeachBall className="text-3xl text-cyan-700" />, bg: "bg-black", sideBg: "bg-cyan-700" },
+badminton: {  icon: <GiShuttlecock className="text-3xl text-blue-400" />, bg: "bg-black", sideBg: "bg-blue-900" },
+basketball: { icon: <FaBasketballBall className="text-3xl text-orange-500" />, bg: "bg-black", sideBg: "bg-orange-900" },
+tableTennis: {  icon: <FaTableTennis className="text-3xl text-red-400" />, bg: "bg-black", sideBg: "bg-red-900" },
 };
 
+// Generate booking slots
 function generateBookingSlots(selectedDate) {
   const slots = [];
   const now = new Date();
@@ -40,15 +39,17 @@ function formatTime(hour) {
   return `${adjustedHour}:00 ${period}`;
 }
 
-const BookingTicket = ({ slot, selectedDate, court, disabled }) => {
+// Booking Ticket Component
+const BookingTicket = ({ slot, selectedDate, courtName, courtType, disabled }) => {
   const displayDate = selectedDate.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 
-  const courtInfo = courtConfig[court] || {
-    name: "All Courts",
+  // Get proper config for the court
+  const courtInfo = courtConfig[courtType] || {
+    name: courtName || "All Courts",
     icon: <FaFutbol className="text-3xl text-gray-400" />,
     bg: "bg-neutral-800",
     sideBg: "bg-neutral-700",
@@ -57,7 +58,7 @@ const BookingTicket = ({ slot, selectedDate, court, disabled }) => {
   return (
     <Link
       to={disabled ? "#" : "/booking-details"}
-      state={{ slot, selectedDate, court }}
+      state={{ slot, selectedDate, courtName, courtType }}
       className="relative w-[380px]"
     >
       <div
@@ -67,7 +68,7 @@ const BookingTicket = ({ slot, selectedDate, court, disabled }) => {
         <div className="flex flex-col justify-between gap-2 p-6 flex-1">
           <div className="flex items-center gap-3">
             {courtInfo.icon}
-            <h2 className="text-lg font-bold">{courtInfo.name}</h2>
+            <h2 className="text-lg font-bold">{courtName}</h2>
           </div>
           <div>
             <p className="text-sm text-gray-300">{displayDate}</p>
@@ -98,25 +99,32 @@ const BookingTicket = ({ slot, selectedDate, court, disabled }) => {
 };
 
 
-export const BookingTicketsList = ({ selectedDate, court, bookedSlots }) => {
+export const BookingTicketsList = ({ selectedDate, court, bookedSlots = [], courts = [] }) => {
   const slots = generateBookingSlots(selectedDate);
-  const allCourts = Object.keys(courtConfig);
-  const courtsToRender = court === "all" ? allCourts : [court];
+
+  if (!courts || courts.length === 0) return null;
+
+const courtsToRender =
+  court === "all"
+    ? courts.filter((c) => c.status !== "Maintenance")
+    : courts.filter((c) => c.courtName === court && c.status !== "Maintenance");
+
 
   return (
     <div className="flex flex-wrap justify-center gap-6 p-6">
       {slots.map((slot, slotIndex) =>
         courtsToRender.map((c) => {
           const isBooked = bookedSlots.some(
-            (b) => b.courtName === c && b.slot === slot
+            (b) => b.courtName === c.courtName && b.slot === slot
           );
 
           return (
             <BookingTicket
-              key={`${slotIndex}-${c}`}
+              key={`${slotIndex}-${c.courtName}`}
               slot={slot}
               selectedDate={selectedDate}
-              court={c}
+              courtName={c.courtName}
+              courtType={c.courtType} // this ensures correct color & icon
               disabled={isBooked}
             />
           );

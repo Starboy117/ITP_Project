@@ -161,13 +161,10 @@ const Courts = () => {
 
   const getTypeIcon = (type) => {
     const icons = {
-      futsal1: "⚽",
-      futsal2: "⚽",
+      football: "⚽",
       volleyball: "🏐",
-      beach: "🏖️",
-      badmintonFamily: "🏸",
-      badminton1: "🏸",
-      badminton2: "🏸",
+      beachVolley: "🏖️",
+      badminton: "🏸",
       basketball: "🏀",
       tableTennis: "🏓",
     };
@@ -196,7 +193,7 @@ const Courts = () => {
       <div className="space-y-2 mb-4 text-gray-300 text-sm">
         <div className="flex justify-between">
           <span>Hourly Rate:</span>
-          <span className="font-medium">${court.hourlyRate}</span>
+          <span className="font-medium">LKR {court.hourlyRate}</span>
         </div>
         <div className="flex justify-between">
           <span>Capacity:</span>

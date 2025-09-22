@@ -6,9 +6,9 @@ import BookingConfirmationPDF from "../BookingAvailableComponents/BookingConfirm
 const BookingSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bookingId, court, date, slot, name, phone, email, status } = location.state || {};
+  const { bookingId, courtName, courtType, date, slot, name, phone, email, status } = location.state || {};
 
-  const booking = { bookingId, court, date, slot, name, phone, email, status };
+  const booking = { bookingId, courtName, courtType, date, slot, name, phone, email, status };
 
   const bookingDate = new Date(date);
   const paymentDeadline = new Date(bookingDate);
@@ -37,7 +37,8 @@ const BookingSuccess = () => {
 
         <div className="space-y-1">
           <p>Booking ID: {bookingId}</p>
-          <p>Court: {court}</p>
+          <p>Name: {name}</p>
+          <p>Court: {courtName}</p>
           <p>Date: {bookingDate.toDateString()}</p>
           <p>Time Slot: {slot}</p>
         </div>
