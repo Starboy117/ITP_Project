@@ -13,6 +13,8 @@ const BookingModal = ({ booking, onClose, onSave }) => {
     status: "Pending",
   });
 
+  const [errors, setErrors] = useState({}); // ✅ track errors
+
   useEffect(() => {
     if (booking) {
       setFormData({
@@ -38,7 +40,7 @@ const BookingModal = ({ booking, onClose, onSave }) => {
   const getEndTime = (startTime) => {
     const [time, meridian] = startTime.split(" ");
     let [hour, minute] = time.split(":").map(Number);
-    hour += 1; // add 1 hour
+    hour += 1;
     if (hour === 12) {
       return `12:00 ${meridian === "AM" ? "PM" : "AM"}`;
     } else if (hour > 12) {
@@ -57,7 +59,54 @@ const BookingModal = ({ booking, onClose, onSave }) => {
     });
   };
 
+  // ✅ Validation
+  const validateForm = () => {
+  const newErrors = {};
+
+  if (!formData.name || String(formData.name).trim() === "") {
+    newErrors.name = "Name is required.";
+  }
+
+  if (!formData.email || String(formData.email).trim() === "") {
+    newErrors.email = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(formData.email))) {
+    newErrors.email = "Invalid email format.";
+  }
+
+  if (!formData.phone || String(formData.phone).trim() === "") {
+    newErrors.phone = "Phone number is required.";
+  } else if (!/^\d{10,15}$/.test(String(formData.phone))) {
+    newErrors.phone = "Phone must be 10–15 digits.";
+  }
+
+  if (!formData.courtName) {
+    newErrors.courtName = "Court is required.";
+  }
+
+  if (!formData.date) {
+    newErrors.date = "Date is required.";
+  }
+
+  if (!formData.startTime) {
+    newErrors.startTime = "Start time is required.";
+  }
+
+  if (!formData.endTime) {
+    newErrors.endTime = "End time is required.";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+
   const handleSubmit = () => {
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
     onSave(formData);
   };
 
@@ -67,46 +116,81 @@ const BookingModal = ({ booking, onClose, onSave }) => {
         <h2 className="text-xl font-bold mb-4">{booking ? "Edit Booking" : "New Booking"}</h2>
 
         <div className="space-y-3">
-          <input
-            type="text"
-            placeholder="Name"
-            name="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full p-2 rounded bg-neutral-800 text-white"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            name="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full p-2 rounded bg-neutral-800 text-white"
-          />
-          <input
-            type="text"
-            placeholder="Phone"
-            name="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="w-full p-2 rounded bg-neutral-800 text-white"
-          />
-          <input
-            type="text"
-            placeholder="Court Name"
-            name="courtName"
-            value={formData.courtName}
-            onChange={(e) => setFormData({ ...formData, courtName: e.target.value })}
-            className="w-full p-2 rounded bg-neutral-800 text-white"
-          />
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            className="w-full p-2 rounded bg-neutral-800 text-white"
-          />
+          {/* Name */}
+          <div>
+            <input
+              type="text"
+              placeholder="Name"
+              name="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className={`w-full p-2 rounded bg-neutral-800 text-white border ${
+                errors.name ? "border-red-500" : "border-transparent"
+              }`}
+            />
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          </div>
 
+          {/* Email */}
+          <div>
+            <input
+              type="email"
+              placeholder="Email"
+              name="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className={`w-full p-2 rounded bg-neutral-800 text-white border ${
+                errors.email ? "border-red-500" : "border-transparent"
+              }`}
+            />
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          </div>
+
+          {/* Phone */}
+          <div>
+            <input
+              type="text"
+              placeholder="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className={`w-full p-2 rounded bg-neutral-800 text-white border ${
+                errors.phone ? "border-red-500" : "border-transparent"
+              }`}
+            />
+            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+          </div>
+
+          {/* Court Name */}
+          <div>
+            <input
+              type="text"
+              placeholder="Court Name"
+              name="courtName"
+              value={formData.courtName}
+              onChange={(e) => setFormData({ ...formData, courtName: e.target.value })}
+              className={`w-full p-2 rounded bg-neutral-800 text-white border ${
+                errors.courtName ? "border-red-500" : "border-transparent"
+              }`}
+            />
+            {errors.courtName && <p className="text-red-500 text-sm mt-1">{errors.courtName}</p>}
+          </div>
+
+          {/* Date */}
+          <div>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className={`w-full p-2 rounded bg-neutral-800 text-white border ${
+                errors.date ? "border-red-500" : "border-transparent"
+              }`}
+            />
+            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+          </div>
+
+          {/* Time Selectors */}
           <div className="flex gap-2">
             <select
               name="startTime"
@@ -128,6 +212,7 @@ const BookingModal = ({ booking, onClose, onSave }) => {
             </select>
           </div>
 
+          {/* Status */}
           <select
             name="status"
             value={formData.status}

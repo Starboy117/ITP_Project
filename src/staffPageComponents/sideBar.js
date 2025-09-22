@@ -8,9 +8,9 @@ const Sidebar = () => {
   const menuItems = [
     { name: 'Overview', icon: HomeIcon, path: '/ReceptionistDashboard' }, // new overview link
     { name: 'Bookings', icon: CalendarDaysIcon, path: '/ReceptionistDashboard/bookings' },
-    { name: 'Reports', icon: ChartBarIcon, path: '/ReceptionistDashboard/reports' },
     { name: 'Courts', icon: BuildingOfficeIcon, path: '/ReceptionistDashboard/courts' },
-    { name: 'Payment', icon: CreditCardIcon, path: '/ReceptionistDashboard/payments' }
+    { name: 'Payment', icon: CreditCardIcon, path: '/ReceptionistDashboard/payments' },
+    { name: 'Reports', icon: ChartBarIcon, path: '/ReceptionistDashboard/reports' },
   ];
 
   return (

@@ -24,10 +24,30 @@ const addCourt = async (req, res) => {
       imageUrl,
     } = req.body;
 
-  
+
+    if (!courtName || String(courtName).trim() === "") {
+      return res.status(400).json({ error: "Court name is required." });
+    }
+    if (!courtType || String(courtType).trim() === "") {
+      return res.status(400).json({ error: "Court type is required." });
+    }
+    if (hourlyRate == null || isNaN(hourlyRate) || Number(hourlyRate) <= 0) {
+      return res.status(400).json({ error: "Hourly rate must be a positive number." });
+    }
+    if (!status || String(status).trim() === "") {
+      return res.status(400).json({ error: "Status is required." });
+    }
+    if (capacity == null || isNaN(capacity) || Number(capacity) <= 0) {
+      return res.status(400).json({ error: "Capacity must be a positive number." });
+    }
+    if (!location || String(location).trim() === "") {
+      return res.status(400).json({ error: "Location is required." });
+    }
+    
+
+   
     const courtId = await generateCourtId();
 
-    
     const newCourt = new Court({
       courtId,
       courtName,
@@ -65,5 +85,48 @@ const getAllCourts = async (req, res) => {
   }
 };
 
-module.exports = { addCourt,getAllCourts };
+
+const updateCourt = async (req, res) => {
+  try {
+    const { courtId } = req.params; // from URL
+    const data = req.body; // updated fields
+
+    // Use findOneAndUpdate with courtId, not findById
+    const updatedCourt = await Court.findOneAndUpdate({ courtId }, data, { new: true });
+
+    if (!updatedCourt) {
+      return res.status(404).json({ message: "Court not found" });
+    }
+
+    res.status(200).json({
+      message: "Court updated successfully",
+      court: updatedCourt,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating court", error: error.message });
+  }
+};
+
+
+
+const deleteCourt = async (req, res) => {
+  const { id } = req.params; // corrected
+
+  try {
+    const deleted = await Court.findOneAndDelete({ courtId: id }); // use courtId
+    if (!deleted) {
+      return res.status(404).json({ message: "Court not found" });
+    }
+
+    res.status(200).json({ message: "Court deleted successfully", court: deleted });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting court", error: error.message });
+  }
+};
+
+
+
+
+
+module.exports = { addCourt,getAllCourts,updateCourt,deleteCourt };
 

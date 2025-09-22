@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusIcon, PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon } from "@heroicons/react/24/outline";
 import Sidebar from "../staffPageComponents/sideBar";
 import CourtModal from "../staffPageComponents/CourtModel";
 
@@ -17,24 +17,137 @@ const courtTypes = [
 
 const Courts = () => {
   const [courts, setCourts] = useState([]);
-  const [viewMode, setViewMode] = useState("grid");
   const [showModal, setShowModal] = useState(false);
-  const [editingCourt, setEditingCourt] = useState(null);
+  const [selectedCourt, setSelectedCourt] = useState(null);
+  const [courtToDelete, setCourtToDelete] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Load all courts when component mounts
+  // ✅ Notification state
+  const [notification, setNotification] = useState({ message: "", type: "" });
+
+  // ✅ Notification component
+  const Notification = ({ message, type, onClose }) => {
+    if (!message) return null;
+    return (
+      <div
+        className={`fixed top-5 right-5 px-4 py-3 rounded shadow-lg z-50 transition-all duration-300 ${
+          type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
+        }`}
+      >
+        <span>{message}</span>
+        <button className="ml-4 font-bold" onClick={onClose}>
+          X
+        </button>
+      </div>
+    );
+  };
+
+  // Helper to show notification
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
+  };
+
+  // ✅ Fetch courts from backend
   useEffect(() => {
     const fetchCourts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/courts/getAllCourts");
-        if (!response.ok) throw new Error("Failed to fetch courts");
-        const data = await response.json();
-        setCourts(data.courts); // make sure your backend sends { courts: [...] }
+        const res = await fetch("http://localhost:5000/api/courts/getAllCourts");
+        if (!res.ok) throw new Error("Failed to fetch courts");
+        const data = await res.json();
+        setCourts(data.courts || []);
       } catch (err) {
-        console.error("Error fetching courts:", err);
+        showNotification("Error fetching courts", "error");
       }
     };
     fetchCourts();
   }, []);
+
+  // ✅ Add or Edit Court
+  const handleSaveCourt = async (courtData) => {
+    try {
+      if (selectedCourt) {
+        // Edit court
+        const res = await fetch(
+          `http://localhost:5000/api/courts/updateCourt/${selectedCourt.courtId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(courtData),
+          }
+        );
+        const data = await res.json();
+        if (res.ok) {
+          setCourts(
+            courts.map((c) =>
+              c.courtId === selectedCourt.courtId ? data.court : c
+            )
+          );
+          showNotification("Court updated successfully!", "success");
+        } else {
+          showNotification(data.message || "Failed to update court", "error");
+        }
+      } else {
+        // Add new court
+        const res = await fetch("http://localhost:5000/api/courts/addCourt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(courtData),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setCourts([...courts, data.court]);
+          showNotification("Court added successfully!", "success");
+        } else {
+          showNotification(data.message || "Failed to add court", "error");
+        }
+      }
+      setShowModal(false);
+      setSelectedCourt(null);
+    } catch (err) {
+      showNotification("Error saving court", "error");
+    }
+  };
+
+  // Edit court
+  const handleEditCourt = (court) => {
+    setSelectedCourt(court);
+    setShowModal(true);
+  };
+
+  // New court
+  const handleNewCourt = () => {
+    setSelectedCourt(null);
+    setShowModal(true);
+  };
+
+  // Confirm delete
+  const confirmDeleteCourt = (court) => {
+    setCourtToDelete(court);
+    setShowDeleteModal(true);
+  };
+
+  // ✅ Delete court
+  const handleDeleteConfirmed = async () => {
+    if (!courtToDelete) return;
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/courts/deleteCourt/${courtToDelete.courtId}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setCourts(courts.filter((c) => c.courtId !== courtToDelete.courtId));
+        showNotification("Court deleted successfully!", "success");
+      } else {
+        showNotification(data.message || "Failed to delete court", "error");
+      }
+      setShowDeleteModal(false);
+      setCourtToDelete(null);
+    } catch (err) {
+      showNotification("Error deleting court", "error");
+    }
+  };
 
   const getStatusColor = (status) => {
     const colors = {
@@ -46,245 +159,136 @@ const Courts = () => {
     return colors[status] || "bg-gray-700 text-gray-300";
   };
 
-const getTypeIcon = (type) => {
-  if (!type) return "🏟️"; // default icon if type is missing
-  const lowerType = type.toLowerCase().replace(/\s/g, "");
-  const icons = {
-    futsal1: "⚽",
-    futsal2: "⚽",
-    volleyball: "🏐",
-    beachvolleyballcourt: "🏖️",
-    badmintonfamily: "🏸",
-    badminton1: "🏸",
-    badminton2: "🏸",
-    basketball: "🏀",
-    tabletennisroom: "🏓",
+  const getTypeIcon = (type) => {
+    const icons = {
+      futsal1: "⚽",
+      futsal2: "⚽",
+      volleyball: "🏐",
+      beach: "🏖️",
+      badmintonFamily: "🏸",
+      badminton1: "🏸",
+      badminton2: "🏸",
+      basketball: "🏀",
+      tableTennis: "🏓",
+    };
+    return icons[type] || "🏟️";
   };
-  return icons[lowerType] || "🏟️";
-};
 
+  const CourtCard = ({ court }) => (
+    <div className="bg-neutral-800 rounded-xl shadow-lg p-6 flex flex-col justify-between h-full">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <span className="text-4xl">{getTypeIcon(court.courtType)}</span>
+          <div>
+            <h3 className="text-lg font-bold text-white">{court.courtName}</h3>
+            <p className="text-sm text-gray-400">{court.courtType}</p>
+          </div>
+        </div>
+        <span
+          className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+            court.status
+          )}`}
+        >
+          {court.status}
+        </span>
+      </div>
 
-const CourtCard = ({ court, onEdit, onDelete }) => (
-  <div className="bg-neutral-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 flex flex-col justify-between h-full">
-    {/* Header: Icon, Name, Type */}
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center space-x-3">
-        <span className="text-4xl">{getTypeIcon(court.courtType)}</span>
-        <div>
-          <h3 className="text-lg font-bold text-white">{court.courtName}</h3>
-          <p className="text-sm text-gray-400">{court.type}</p>
+      <div className="space-y-2 mb-4 text-gray-300 text-sm">
+        <div className="flex justify-between">
+          <span>Hourly Rate:</span>
+          <span className="font-medium">${court.hourlyRate}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Capacity:</span>
+          <span className="font-medium">{court.capacity} players</span>
+        </div>
+        {court.description && (
+          <p className="text-gray-400 text-xs mt-1">{court.description}</p>
+        )}
+      </div>
+
+      <div className="flex justify-between items-center text-xs text-gray-400 mt-auto">
+        <div className="space-x-2">
+          <button
+            className="p-1 text-gray-400 hover:text-gray-200"
+            onClick={() => handleEditCourt(court)}
+          >
+            <PencilIcon className="h-4 w-4" />
+          </button>
+          <button
+            className="p-1 text-red-500 hover:text-red-400"
+            onClick={() => confirmDeleteCourt(court)}
+          >
+            Delete
+          </button>
         </div>
       </div>
-      <span
-        className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-          court.status
-        )}`}
-      >
-        {court.status}
-      </span>
     </div>
-
-    {/* Main Details */}
-    <div className="space-y-2 mb-4 text-gray-300 text-sm">
-      <div className="flex justify-between">
-        <span>Hourly Rate:</span>
-        <span className="font-medium">${court.hourlyRate}</span>
-      </div>
-      <div className="flex justify-between">
-        <span>Capacity:</span>
-        <span className="font-medium">{court.capacity} players</span>
-      </div>
-      <div className="flex justify-between">
-        <span>Today's Bookings:</span>
-        <span className="font-medium">{court.bookingsToday || 0}</span>
-      </div>
-      {court.description && (
-        <p className="text-gray-400 text-xs mt-1">{court.description}</p>
-      )}
-    </div>
-
-    {/* Amenities */}
-    {court.amenities && court.amenities.length > 0 && (
-      <div className="mb-4">
-        <h4 className="text-xs font-medium text-gray-400 mb-1">Amenities:</h4>
-        <div className="flex flex-wrap gap-1">
-          {court.amenities.map((amenity, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-1 bg-neutral-700 text-gray-200 text-xs rounded-full"
-            >
-              {amenity}
-            </span>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Footer: Actions & Maintenance */}
-    <div className="flex justify-between items-center text-xs text-gray-400 mt-auto">
-      <div className="space-x-2">
-        <button
-          className="p-1 text-gray-400 hover:text-gray-200"
-          onClick={() => onEdit(court)}
-        >
-          <PencilIcon className="h-4 w-4" />
-        </button>
-        <button
-          className="p-1 text-red-500 hover:text-red-400"
-          onClick={() => onDelete(court.courtId)}
-        >
-          Delete
-        </button>
-      </div>
-      <div className="text-right">
-        Last Maintenance: {court.maintenanceDate || "N/A"}
-      </div>
-    </div>
-  </div>
-);
-
-  const handleSaveCourt = async (courtData) => {
-    try {
-      const response = await fetch("http://localhost:5000/api/courts/addCourt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(courtData),
-      });
-      if (!response.ok) throw new Error("Failed to add court");
-      const data = await response.json();
-      setCourts([...courts, data.court]);
-      setShowModal(false);
-      setEditingCourt(null);
-    } catch (err) {
-      console.error("Error adding court:", err);
-    }
-  };
+  );
 
   return (
     <div className="flex min-h-screen bg-neutral-900 text-white">
+      {/* ✅ Notification */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ message: "", type: "" })}
+      />
+
       <div className="w-64">
         <Sidebar />
       </div>
-
       <div className="flex-1 p-6 space-y-6 overflow-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <div>
-            <h2 className="text-2xl font-bold">Court Management</h2>
-            <p className="mt-1 text-sm text-gray-400">
-              Manage court availability, rates, and maintenance
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex border border-gray-600 rounded-md">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-3 py-2 text-sm ${
-                  viewMode === "grid" ? "bg-blue-600 text-white" : "text-gray-400"
-                }`}
-              >
-                Grid
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`px-3 py-2 text-sm ${
-                  viewMode === "list" ? "bg-blue-600 text-white" : "text-gray-400"
-                }`}
-              >
-                List
-              </button>
-            </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-              Add Court
-            </button>
-          </div>
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Court Management</h2>
+          <button
+            onClick={handleNewCourt}
+            className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+            Add Court
+          </button>
         </div>
 
-        {/* Courts Grid */}
-        {viewMode === "grid" ? (
-  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {courts.map((court) => (
-      <CourtCard
-        key={court.courtId}
-        court={court}
-        onEdit={(c) => { setEditingCourt(c); setShowModal(true); }}
-        onDelete={(id) => setCourts(courts.filter(c => c.courtId !== id))}
-      />
-    ))}
-  </div>
-) : (
-  <div className="bg-neutral-800 shadow rounded-lg overflow-auto">
-    <table className="min-w-full divide-y divide-gray-700">
-      <thead className="bg-neutral-700">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Court
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Type
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Status
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Hourly Rate
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Capacity
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Bookings Today
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-700">
-        {courts.map((court) => (
-          <tr key={court.courtId} className="hover:bg-neutral-700 text-gray-200">
-            <td className="px-6 py-4 flex items-center space-x-2">
-              <span className="text-xl">{getTypeIcon(court.courtType)}</span>
-              <span>{court.courtName}</span>
-            </td>
-            <td className="px-6 py-4">{court.courtType}</td>
-            <td className="px-6 py-4">
-              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(court.status)}`}>
-                {court.status}
-              </span>
-            </td>
-            <td className="px-6 py-4">${court.hourlyRate}</td>
-            <td className="px-6 py-4">{court.capacity}</td>
-            <td className="px-6 py-4">{court.bookingsToday || 0}</td>
-            <td className="px-6 py-4 flex space-x-2">
-              <button className="text-gray-400 hover:text-gray-200" onClick={() => { setEditingCourt(court); setShowModal(true); }}>
-                <PencilIcon className="h-4 w-4" />
-              </button>
-              <button className="text-red-500 hover:text-red-400" onClick={() => setCourts(courts.filter(c => c.courtId !== court.courtId))}>
-                Delete
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courts.map((court) => (
+            <CourtCard key={court.courtId} court={court} />
+          ))}
+        </div>
 
         {showModal && (
           <CourtModal
-            court={editingCourt}
+            court={selectedCourt}
             onClose={() => {
               setShowModal(false);
-              setEditingCourt(null);
+              setSelectedCourt(null);
             }}
             onSave={handleSaveCourt}
           />
+        )}
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-neutral-800 p-6 rounded-lg shadow-lg text-white w-96">
+              <h3 className="text-lg font-bold mb-4">
+                Are you sure you want to delete "{courtToDelete?.courtName}"?
+              </h3>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirmed}
+                  className="px-4 py-2 bg-red-600 rounded hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -14,13 +14,30 @@ const addReservation = async (req, res) => {
   try {
     const { userId, name, phone, email, courtName, date, startTime, endTime, status } = req.body;
 
-    const bookingId = await generateBookingId();
 
-    if (!name || !phone || !email || !courtName || !date || !startTime || !endTime || !bookingId) {
-      return res.status(400).json({ error: "Inputs cannot be null." });
+    if (!name) return res.status(400).json({ error: "Name is required." });
+    if (!phone) return res.status(400).json({ error: "Phone number is required." });
+    if (!email) return res.status(400).json({ error: "Email is required." });
+    if (!courtName) return res.status(400).json({ error: "Court name is required." });
+    if (!date) return res.status(400).json({ error: "Date is required." });
+    if (!startTime) return res.status(400).json({ error: "Start time is required." });
+    if (!endTime) return res.status(400).json({ error: "End time is required." });
+
+ 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format." });
     }
 
-    
+   
+    const phoneRegex = /^[0-9]{10,15}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ error: "Invalid phone number format." });
+    }
+
+    const bookingId = await generateBookingId();
+    if (!bookingId) return res.status(500).json({ error: "Failed to generate booking ID." });
+
 
     const reservation = new Reservation({
       bookingId,
@@ -43,6 +60,7 @@ const addReservation = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 
@@ -97,74 +115,87 @@ const getTodayReservations = async (req, res) => {
   }
 };
 
-const updateReservationId = async (req,res) => {
-
-  let {bookingId} = req.body;
-
-  if(!bookingId){
-    res.status(500).json({ message: err.message });
-
-  }
-
-  try{
-
-
-  }
-  catch(err){
-    console.error(err);
-    res.status(500).json({ message: err.message });
-
-  }
-}
-
 
 
 
 const updateReservation = async (req, res) => {
   try {
-    const { bookingId } = req.params; // URL param
-    const updateData = req.body; // new data
+    const { bookingId } = req.params;
+    const { name, email, phone, courtName, date, startTime, endTime, status } = req.body;
 
+   
     if (!bookingId) {
       return res.status(400).json({ error: "Reservation ID is required." });
     }
 
-    // Find the reservation to update
+
+    if (!name) return res.status(400).json({ error: "Name is required." });
+    if (!email) return res.status(400).json({ error: "Email is required." });
+    if (!phone) return res.status(400).json({ error: "Phone number is required." });
+    if (!courtName) return res.status(400).json({ error: "Court name is required." });
+    if (!date) return res.status(400).json({ error: "Date is required." });
+    if (!startTime) return res.status(400).json({ error: "Start time is required." });
+    if (!endTime) return res.status(400).json({ error: "End time is required." });
+
+ 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format." });
+    }
+
+    const phoneRegex = /^[0-9]{7,15}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ error: "Phone number must be 7–15 digits." });
+    }
+
+   
+    const bookingDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (isNaN(bookingDate.getTime()) || bookingDate < today) {
+      return res.status(400).json({ error: "Date must be today or in the future." });
+    }
+
+
     const reservation = await Reservation.findById(bookingId);
     if (!reservation) {
       return res.status(404).json({ error: "Reservation not found." });
     }
 
-    // Check if the new slot is already booked
-    const reservations = await Reservation.find({
-      _id: { $ne: bookingId }, // exclude current reservation
-      date: updateData.date,
-      courtName: updateData.courtName,
-      startTime: updateData.startTime,
+    const existing = await Reservation.findOne({
+      _id: { $ne: bookingId },
+      date,
+      courtName,
+      startTime,
     });
 
-    if (reservations.length > 0) {
+    if (existing) {
       return res.status(400).json({ error: "This court is already booked at that time." });
     }
 
-
-    reservation.name = updateData.name || reservation.name;
-    reservation.email = updateData.email || reservation.email;
-    reservation.phone = updateData.phone || reservation.phone;
-    reservation.courtName = updateData.courtName || reservation.courtName;
-    reservation.date = updateData.date || reservation.date;
-    reservation.startTime = updateData.startTime || reservation.startTime;
-    reservation.endTime = updateData.endTime || reservation.endTime;
-    reservation.status = updateData.status || reservation.status;
+   
+    
+    reservation.name = name;
+    reservation.email = email;
+    reservation.phone = phone;
+    reservation.courtName = courtName;
+    reservation.date = date;
+    reservation.startTime = startTime;
+    reservation.endTime = endTime;
+    reservation.status = status || reservation.status;
 
     const updatedReservation = await reservation.save();
 
-    res.status(200).json({ reservation: updatedReservation });
+    res.status(200).json({
+      message: "Reservation updated successfully.",
+      reservation: updatedReservation,
+    });
   } catch (error) {
     console.error("Error updating reservation:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 
 

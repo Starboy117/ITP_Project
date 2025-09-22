@@ -12,6 +12,7 @@ const BookingDetails = () => {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({}); // ✅ track validation errors
 
   // ⚠ Prevent access if user tries to go here directly or via back button
   useEffect(() => {
@@ -20,12 +21,32 @@ const BookingDetails = () => {
     }
   }, [slot, selectedDate, court, navigate]);
 
+  // ✅ Validate form inputs
+  const validateForm = () => {
+    const newErrors = {};
+    if (!name.trim()) newErrors.name = "Name is required.";
+    if (!phone.trim()) {
+      newErrors.phone = "Phone number is required.";
+    } else if (!/^[0-9]{10,15}$/.test(phone)) {
+      newErrors.phone = "Phone must be 10-15 digits.";
+    }
+    if (!email.trim()) {
+      newErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Invalid email format.";
+    }
+    return newErrors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !phone || !email) {
-      alert("Please fill all fields");
+
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+    setErrors({}); // clear old errors
 
     setLoading(true);
     const [startTime, endTime] = slot.split(" - ");
@@ -50,15 +71,24 @@ const BookingDetails = () => {
       const result = await res.json();
       if (res.ok) {
         navigate("/booking-success", {
-          state: { bookingId: result.bookingId, court, date: selectedDate, slot, name, email, phone, status: result.status },
+          state: {
+            bookingId: result.bookingId,
+            court,
+            date: selectedDate,
+            slot,
+            name,
+            email,
+            phone,
+            status: result.status
+          },
           replace: true // replace history to prevent going back to form
         });
       } else {
-        alert("Booking failed: " + result.error);
+        setErrors({ general: result.error });
       }
     } catch (err) {
       console.error(err);
-      alert("Error connecting to server");
+      setErrors({ general: "Error connecting to server" });
     } finally {
       setLoading(false);
     }
@@ -74,42 +104,91 @@ const BookingDetails = () => {
             {/* Court */}
             <div>
               <label className="block mb-2 font-semibold">Court</label>
-              <input type="text" value={court} disabled className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]" />
+              <input
+                type="text"
+                value={court}
+                disabled
+                className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
+              />
             </div>
 
             {/* Slot */}
             <div>
               <label className="block mb-2 font-semibold">Time Slot</label>
-              <input type="text" value={slot} disabled className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]" />
+              <input
+                type="text"
+                value={slot}
+                disabled
+                className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
+              />
             </div>
 
             {/* Date and Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-2 font-semibold">Date</label>
-                <input type="text" value={selectedDate?.toLocaleDateString()} disabled className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]" />
+                <input
+                  type="text"
+                  value={selectedDate?.toLocaleDateString()}
+                  disabled
+                  className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
+                />
               </div>
               <div>
                 <label className="block mb-2 font-semibold">Phone Number</label>
-                <input type="tel" placeholder="Enter your phone number" value={phone} onChange={e => setPhone(e.target.value)} className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]" />
+                <input
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={`w-full p-3 rounded-lg bg-gray-900 border ${
+                    errors.phone ? "border-red-500" : "border-gray-700"
+                  } text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]`}
+                />
+                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
               </div>
             </div>
 
             {/* Name */}
             <div>
               <label className="block mb-2 font-semibold">Your Name</label>
-              <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]" />
+              <input
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`w-full p-3 rounded-lg bg-gray-900 border ${
+                  errors.name ? "border-red-500" : "border-gray-700"
+                } text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]`}
+              />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
 
             {/* Email */}
             <div>
               <label className="block mb-2 font-semibold">Email</label>
-              <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]" />
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`w-full p-3 rounded-lg bg-gray-900 border ${
+                  errors.email ? "border-red-500" : "border-gray-700"
+                } text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]`}
+              />
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
+
+            {/* General error */}
+            {errors.general && <p className="text-red-500 text-center">{errors.general}</p>}
 
             {/* Submit */}
             <div className="text-center mt-4">
-              <button type="submit" disabled={loading} className="px-6 py-3 bg-[#0097B2] rounded-lg text-white font-semibold shadow-md hover:bg-[#007A8F] transition">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-3 bg-[#0097B2] rounded-lg text-white font-semibold shadow-md hover:bg-[#007A8F] transition"
+              >
                 {loading ? "Booking..." : "Confirm Booking"}
               </button>
             </div>
