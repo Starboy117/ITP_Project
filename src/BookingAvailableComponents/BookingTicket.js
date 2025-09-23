@@ -40,7 +40,7 @@ function formatTime(hour) {
 }
 
 // Booking Ticket Component
-const BookingTicket = ({ slot, selectedDate, courtName, courtType, disabled }) => {
+const BookingTicket = ({ slot, selectedDate, courtName, courtType,courtPrice, disabled }) => {
   const displayDate = selectedDate.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -58,7 +58,7 @@ const BookingTicket = ({ slot, selectedDate, courtName, courtType, disabled }) =
   return (
     <Link
       to={disabled ? "#" : "/booking-details"}
-      state={{ slot, selectedDate, courtName, courtType }}
+      state={{ slot, selectedDate, courtName, courtType, courtPrice }}
       className="relative w-[380px]"
     >
       <div
@@ -124,7 +124,8 @@ const courtsToRender =
               slot={slot}
               selectedDate={selectedDate}
               courtName={c.courtName}
-              courtType={c.courtType} // this ensures correct color & icon
+              courtType={c.courtType}
+              courtPrice={c.hourlyRate}
               disabled={isBooked}
             />
           );

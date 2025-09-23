@@ -6,7 +6,8 @@ import CopyrightFooter from "../BookingAvailableComponents/CopyrightFooter";
 const BookingDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { slot, selectedDate, courtName, courtType } = location.state || {}; // ✅ use correct values
+  const { slot, selectedDate, courtName, courtType, courtPrice } =
+    location.state || {}; // ✅ use correct values
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -55,27 +56,30 @@ const BookingDetails = () => {
       name,
       phone: Number(phone),
       email,
-      courtName, 
-      courtType, 
+      courtName,
+      courtType,
       date: selectedDate,
       startTime,
       endTime,
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/reservations/addBookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await fetch(
+        "http://localhost:5000/api/reservations/addBookings",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
 
       const result = await res.json();
       if (res.ok) {
         navigate("/booking-success", {
           state: {
             bookingId: result.bookingId,
-            courtName, 
-            courtType, 
+            courtName,
+            courtType,
             date: selectedDate,
             slot,
             name,
@@ -100,7 +104,9 @@ const BookingDetails = () => {
     <div className="min-h-screen flex flex-col bg-neutral-900 text-white">
       <Navbar />
       <div className="flex-1 px-6 sm:px-12 lg:px-24 mt-28">
-        <h1 className="text-3xl font-bold text-center mb-10">Booking Details</h1>
+        <h1 className="text-3xl font-bold text-center mb-10">
+          Booking Details
+        </h1>
         <div className="max-w-2xl mx-auto bg-neutral-800 rounded-2xl shadow-lg p-8">
           <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
             {/* Court */}
@@ -120,6 +126,16 @@ const BookingDetails = () => {
               <input
                 type="text"
                 value={courtType}
+                disabled
+                className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 font-semibold">Court Price</label>
+              <input
+                type="text"
+                value={`LKR ${courtPrice}`} // ✅ add LKR prefix
                 disabled
                 className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
               />
@@ -158,7 +174,9 @@ const BookingDetails = () => {
                     errors.phone ? "border-red-500" : "border-gray-700"
                   } text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]`}
                 />
-                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                )}
               </div>
             </div>
 
@@ -174,7 +192,9 @@ const BookingDetails = () => {
                   errors.name ? "border-red-500" : "border-gray-700"
                 } text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]`}
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -189,11 +209,15 @@ const BookingDetails = () => {
                   errors.email ? "border-red-500" : "border-gray-700"
                 } text-white focus:outline-none focus:ring-2 focus:ring-[#0097B2]`}
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* General error */}
-            {errors.general && <p className="text-red-500 text-center">{errors.general}</p>}
+            {errors.general && (
+              <p className="text-red-500 text-center">{errors.general}</p>
+            )}
 
             {/* Submit */}
             <div className="text-center mt-4">
