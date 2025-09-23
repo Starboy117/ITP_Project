@@ -1,16 +1,25 @@
 import React from 'react';
-import { CalendarDaysIcon, ChartBarIcon, BuildingOfficeIcon, CreditCardIcon, HomeIcon } from '@heroicons/react/24/outline';
+import {
+  CalendarDaysIcon,
+  ChartBarIcon,
+  BuildingOfficeIcon,
+  CreditCardIcon,
+  HomeIcon,
+  ChatBubbleLeftIcon, // new icon for Inquiries
+} from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { name: 'Overview', icon: HomeIcon, path: '/ReceptionistDashboard' }, // new overview link
+    { name: 'Overview', icon: HomeIcon, path: '/ReceptionistDashboard' },
     { name: 'Bookings', icon: CalendarDaysIcon, path: '/ReceptionistDashboard/bookings' },
     { name: 'Courts', icon: BuildingOfficeIcon, path: '/ReceptionistDashboard/courts' },
     { name: 'Payment', icon: CreditCardIcon, path: '/ReceptionistDashboard/payments' },
+    { name: 'Inquiries', icon: ChatBubbleLeftIcon, path: '/manageInquiry' }, 
     { name: 'Reports', icon: ChartBarIcon, path: '/ReceptionistDashboard/reports' },
+    // changed icon
   ];
 
   return (
@@ -33,7 +42,6 @@ const Sidebar = () => {
           );
         })}
       </nav>
-      
     </div>
   );
 };
