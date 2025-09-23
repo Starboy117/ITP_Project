@@ -49,7 +49,7 @@ function Navbar() {
                   <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gray-300 transition-all group-hover:w-full"></span>
                 </Link>
               </li>
-              {/* <li>
+              <li>
                 <Link
                   to="/gallery"
                   className="text-white hover:text-gray-300 px-3 py-2 text-sm font-normal transition-colors relative group"
@@ -57,10 +57,10 @@ function Navbar() {
                   GALLERY
                   <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gray-300 transition-all group-hover:w-full"></span>
                 </Link>
-              </li> */}
+              </li>
               <li>
                 <Link
-                  to="/shop"
+                  to="/user-shop"
                   className="text-white hover:text-gray-300 px-3 py-2 text-sm font-normal transition-colors relative group"
                 >
                   SHOP
