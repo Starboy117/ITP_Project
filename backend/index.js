@@ -23,6 +23,13 @@ const statsRoutes = require("./routes/statRoute");
 app.use("/api/stats",statsRoutes);
 
 
+const paymentRoutes = require("./routes/paymentRoutes");
+const inquiryRoutes = require("./routes/inquiryRoutes");
+
+app.use("/api/inquiries", inquiryRoutes);
+app.use("/api/payments", paymentRoutes);
+
+
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {

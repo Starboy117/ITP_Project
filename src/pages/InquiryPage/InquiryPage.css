@@ -1,0 +1,112 @@
+.inquiry-page {
+  min-height: 100vh;
+  background: #1f1f2e;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  padding: 30px 15px;
+  font-family: "Inter", sans-serif;
+}
+
+.page-card {
+  background: #2a2a3d;
+  padding: 25px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1000px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.page-card h2 {
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  text-align: center;
+  color: #00bcd4;
+}
+
+.error-box {
+  background: #ff4c4c;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.inquiry-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  background: #3a3a50;
+  color: #fff;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  flex: 1;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #00bcd4;
+}
+
+.btn {
+  background: #00bcd4;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  background: #00a4b4;
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid #fff;
+}
+
+.btn.ghost:hover {
+  background: #fff;
+  color: #2a2a3d;
+}
+
+.table.inquiries {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 0.9rem;
+}
+
+.table.inquiries th,
+.table.inquiries td {
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.table.inquiries th {
+  background: #3a3a50;
+  color: #00bcd4;
+}
+
+.table.inquiries tr {
+  border-bottom: 1px solid #444;
+  transition: background 0.2s;
+}
+
+.table.inquiries tr:hover {
+  background: #3f3f5a;
+}
+
+.actions button {
+  margin-right: 5px;
+}
+
+
+

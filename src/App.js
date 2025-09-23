@@ -9,6 +9,9 @@ import Bookings from "./receptionistPages/booking";
 import Reports from "./receptionistPages/reports";
 import Courts from "./receptionistPages/courts";
 import Payments from "./receptionistPages/payments";
+import PaymentPage from "./receptionistPages/payments";
+import InquiryPage from "./pages/InquiryPage/InquiryPage";
+import ManageInquiries from "./pages/InquiryPage/manageInquiries";
 
 function App() {
   return (
@@ -21,10 +24,15 @@ function App() {
         <Route path="/booking-success" element={<BookingSuccess />} />
         <Route path="/ReceptionistDashboard" element={<RDashboard />} />
         <Route path="/ReceptionistDashboard/bookings" element={<Bookings />} />
-        <Route path="/ReceptionistDashboard/reportss" element={<Reports />} />
+        <Route path="/ReceptionistDashboard/reports" element={<Reports />} />
         <Route path="/ReceptionistDashboard/courts" element={<Courts />} />
-        <Route path="/ReceptionistDashboard/paymentss" element={<Payments />} />
-        
+        <Route path="/ReceptionistDashboard/payments" element={<Payments />} />
+
+       
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/inquiry" element={<InquiryPage />} />
+        <Route path="/manageInquiry" element={<ManageInquiries />} />
+
       </Routes>
     </Router>
   );

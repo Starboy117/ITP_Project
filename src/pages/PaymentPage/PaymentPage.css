@@ -1,0 +1,4 @@
+/* Payment page specifics */
+.payment-page .form-row { gap: 12px; align-items: center; margin-bottom: 14px; }
+.payment-page .input.small { width: 160px; }
+.payment-page .actions button { margin-right: 6px; }
