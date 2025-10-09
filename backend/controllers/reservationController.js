@@ -30,10 +30,7 @@ const addReservation = async (req, res) => {
     }
 
    
-   const phoneRegex = /^[1-9][0-9]{9,14}$/;
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({ error: "Invalid phone number format." });
-    }
+
 
     const bookingId = await generateBookingId();
     if (!bookingId) return res.status(500).json({ error: "Failed to generate booking ID." });

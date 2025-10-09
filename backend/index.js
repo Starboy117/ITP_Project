@@ -3,33 +3,39 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
+const { sessionMiddleware } = require('./middleware/sessionMiddleware'); // ✅ session middleware
+
 const app = express();
 
-// Middleware
+// ===== MIDDLEWARE =====
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(sessionMiddleware);
 
 // ===== ROUTES =====
-app.use("/api/reservations", require("./routes/reservationRoute"));
-app.use("/api/courts", require("./routes/courtRoute"));
-app.use("/api/stats", require("./routes/statRoute"));
-app.use("/api/payments", require("./routes/paymentRoutes"));
-app.use("/api/inquiries", require("./routes/inquiryRoutes"));
-app.use("/api/shop", require("./routes/shopRoutes"));
-app.use("/api/maintenance", require("./routes/maintenanceRoutes"));
-app.use("/api/equipments", require("./routes/equipmentRoutes"));
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/reservations', require('./routes/reservationRoute'));
+app.use('/api/courts', require('./routes/courtRoute'));
+app.use('/api/staff', require('./routes/staffRoutes'));
+app.use('/api/stats', require('./routes/statRoute'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/inquiries', require('./routes/inquiryRoutes'));
+app.use('/api/shop', require('./routes/shopRoutes'));
+app.use('/api/maintenance', require('./routes/maintenanceRoutes'));
+app.use('/api/equipments', require('./routes/equipmentRoutes'));
 
-// Health check route
+// ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'Backend running',
-    message: 'Shop & Court Management API is running!',
+    message: 'API is running!',
     timestamp: new Date().toISOString()
   });
 });
 
-// Error handling middleware
+// ===== ERROR HANDLING =====
 app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
   res.status(500).json({
@@ -68,7 +74,7 @@ const startServer = async () => {
   });
 };
 
-// Graceful shutdown
+// ===== GRACEFUL SHUTDOWN =====
 process.on('SIGINT', async () => {
   console.log('\n🛑 Received SIGINT. Shutting down gracefully...');
   await mongoose.connection.close();
