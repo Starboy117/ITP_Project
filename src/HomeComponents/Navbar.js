@@ -1,9 +1,21 @@
-import React from "react";
-import { Link } from "react-router-dom"; // ✅ Import Link
+// src/HomeComponents/Navbar.js
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "../css/Navbar.css";
 import logo1 from "../Images/logo1.png";
 
 function Navbar() {
+  const { currentUser, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
+    navigate("/");
+  };
+
   return (
     <nav className="bg-black bg-opacity-70 text-white font-['Inter'] shadow-lg fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,11 +23,7 @@ function Navbar() {
           {/* Left: Logo */}
           <div className="flex-shrink-0">
             <Link to="/">
-              <img
-                src={logo1}
-                alt="Logo"
-                className="h-40 w-auto" // 4rem = 64px, bigger logo
-              />
+              <img src={logo1} alt="Logo" className="h-40 w-auto" />
             </Link>
           </div>
 
@@ -60,7 +68,7 @@ function Navbar() {
               </li> */}
               <li>
                 <Link
-                  to="/shop"
+                  to="/user-shop"
                   className="text-white hover:text-gray-300 px-3 py-2 text-sm font-normal transition-colors relative group"
                 >
                   SHOP
@@ -70,23 +78,89 @@ function Navbar() {
             </ul>
           </div>
 
-          {/* Right: Icon */}
+          {/* Right: Auth Links / User Menu */}
           <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-full hover:bg-gray-800 transition-colors">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </button>
+            {currentUser ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-[#0097B2] rounded-full flex items-center justify-center text-white font-bold">
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden md:inline">{currentUser.name}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isMenuOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-black bg-opacity-90 rounded-md shadow-lg py-1 z-50">
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-sm text-white hover:bg-gray-800"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    {currentUser.role === "admin" && (
+                      <Link
+                        to="/AdminDashboard"
+                        className="block px-4 py-2 text-sm text-white hover:bg-gray-800"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        AdminDashboard
+                      </Link>
+                    )}
+                    {currentUser.role === "receptionist" && (
+                      <Link
+                        to="/ReceptionistDashboard"
+                        className="block px-4 py-2 text-sm text-white hover:bg-gray-800"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        ReceptionistDashboard
+                      </Link>
+                    )}
+                    {currentUser.role === "staff" && (
+                      <Link
+                        to="/equipment-management"
+                        className="block px-4 py-2 text-sm text-white hover:bg-gray-800"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Staff
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-800"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex space-x-2">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-white hover:text-gray-300"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 text-sm font-medium bg-[#0097B2] text-white rounded-md hover:bg-[#0085a1]"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

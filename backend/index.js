@@ -1,38 +1,99 @@
-import 'dotenv/config'; // equivalent to require('dotenv').config()
+import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import { sessionMiddleware } from './middleware/sessionMiddleware.js';
 
 // Routes
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import reservationRoutes from './routes/reservationRoute.js';
 import courtRoutes from './routes/courtRoute.js';
+import staffRoutes from './routes/staffRoutes.js';
 import statsRoutes from './routes/statRoute.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import inquiryRoutes from './routes/inquiryRoutes.js';
+import shopRoutes from './routes/shopRoutes.js';
+import maintenanceRoutes from './routes/maintenanceRoutes.js';
+import equipmentRoutes from './routes/equipmentRoutes.js';
 
 const app = express();
 
-// Middleware
+// ===== MIDDLEWARE =====
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(sessionMiddleware);
 
-// Test route
+// ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'Backend running', time: new Date().toISOString() });
+  res.json({
+    status: 'Backend running',
+    message: 'API is running!',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Routes
+// ===== ROUTES =====
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/courts', courtRoutes);
+app.use('/api/staff', staffRoutes);
 app.use('/api/stats', statsRoutes);
-app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/shop', shopRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/equipments', equipmentRoutes);
 
-// Connect to MongoDB and start server
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(`Server running on http://localhost:${process.env.PORT || 5000}`);
+// ===== ERROR HANDLING =====
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'production' ? {} : error.message
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'API endpoint not found' });
+});
+
+// ===== DATABASE CONNECTION & SERVER START =====
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/shopmanagement', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+
+  } catch (error) {
+    console.error('❌ Database connection error:', error);
+    process.exit(1);
+  }
+};
+
+// ===== GRACEFUL SHUTDOWN =====
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Received SIGINT. Shutting down gracefully...');
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('🛑 Received SIGTERM. Shutting down gracefully...');
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
+startServer();
