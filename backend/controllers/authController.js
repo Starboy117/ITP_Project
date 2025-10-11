@@ -56,17 +56,19 @@ exports.loginUser = async (req, res) => {
     }
 
     // Save user info in session
-    req.session.user = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role || 'user',
-      isActive: user.isActive !== undefined ? user.isActive : true,
-      membershipType: user.membershipType || 'basic',
-      isAdmin: user.role === 'admin', // optional
-      type: 'user'
-    };
+req.session.userId = user._id; // ✅ for quick session check
+req.session.user = {
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  phone: user.phone,
+  role: user.role || 'user',
+  isActive: user.isActive !== undefined ? user.isActive : true,
+  membershipType: user.membershipType || 'basic',
+  isAdmin: user.role === 'admin',
+  type: 'user'
+};
+
 
     res.json({
       success: true,

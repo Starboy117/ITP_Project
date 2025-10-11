@@ -15,6 +15,7 @@ import InquiryPage from "./pages/InquiryPage/InquiryPage";
 import ManageInquiries from "./pages/InquiryPage/manageInquiries";
 import UserPayment from "./pages/userPayment";
 import PaymentSuccessPage from "./pages/paymentSuccess";
+import ViewBookings from "./pages/ViewBookings";
 
 // Equipment & Shop
 import EquipmentManagement from "./EquipmentPages/EquipmentManagement";
@@ -73,6 +74,7 @@ const AppWrapper = () => {
           <Route path="/pay" element={<UserPayment />} />
           <Route path="/payment-success" element={<PaymentSuccessPage />} />
           <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/viewBookings" element={<ViewBookings/>} />
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

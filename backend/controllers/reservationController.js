@@ -13,8 +13,13 @@ async function generateBookingId() {
 // Add a new reservation
 const addReservation = async (req, res) => {
   try {
-    const { userId, name, phone, email, courtName, date, startTime, endTime, status } = req.body;
+    // ✅ Get userId from session instead of request body
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: "Not logged in." });
 
+    const { name, phone, email, courtName, date, startTime, endTime, status } = req.body;
+
+    // ✅ Validate inputs
     if (!name) return res.status(400).json({ error: "Name is required." });
     if (!phone) return res.status(400).json({ error: "Phone number is required." });
     if (!email) return res.status(400).json({ error: "Email is required." });
@@ -26,12 +31,14 @@ const addReservation = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return res.status(400).json({ error: "Invalid email format." });
 
+    // ✅ Generate booking ID
     const bookingId = await generateBookingId();
     if (!bookingId) return res.status(500).json({ error: "Failed to generate booking ID." });
 
+    // ✅ Create reservation
     const reservation = new Reservation({
       bookingId,
-      userId: userId || "U000",
+      userId, // from session
       name,
       phone,
       email,
@@ -50,6 +57,7 @@ const addReservation = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // Get all reservations
 const getAllReservations = async (req, res) => {
@@ -181,6 +189,22 @@ const confirmReservation = async (req, res) => {
   }
 };
 
+
+const getUserBookings = async (req, res) => {
+  try {
+    const userId = req.user._id; // from session middleware
+    const bookings = await Reservation.find({ userId }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      bookings,
+    });
+  } catch (err) {
+    console.error("Error fetching bookings:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   addReservation,
   checkReservations,
@@ -188,5 +212,6 @@ module.exports = {
   getAllReservations,
   updateReservation,
   deleteReservation,
-  confirmReservation
+  confirmReservation,
+  getUserBookings
 };

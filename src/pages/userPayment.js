@@ -151,12 +151,12 @@ const CheckoutForm = ({ booking }) => {
         <img
           src={visaIcon}
           alt="Visa"
-          className={`w-16 h-10 md:w-20 md:h-12 ${cardBrand === "visa" ? "opacity-100" : "opacity-30"}`}
+          className={`w-16 h-16 md:w-20 md:h-12 ${cardBrand === "visa" ? "opacity-100" : "opacity-30"}`}
         />
         <img
           src={mastercardIcon}
           alt="MasterCard"
-          className={`w-16 h-10 md:w-20 md:h-12 ${cardBrand === "mastercard" ? "opacity-100" : "opacity-30"}`}
+          className={`w-16 h-16 md:w-20 md:h-12 ${cardBrand === "mastercard" ? "opacity-100" : "opacity-30"}`}
         />
       </div>
 
