@@ -7,7 +7,9 @@ const staffSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: { type: String },
+    position: { type: String }, // ADD THIS FIELD
     role: { type: String, enum: ["admin", "staff", "receptionist"], default: "staff" },
+    isActive: { type: Boolean, default: true } // ADD THIS FIELD
   },
   { timestamps: true }
 );
