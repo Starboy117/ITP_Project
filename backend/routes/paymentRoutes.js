@@ -1,20 +1,18 @@
-const express = require("express");
+import express from "express";
+import {
+  getAllPayments,
+  getPaymentById,
+  addPayment,
+  updatePayment,
+  deletePayment,
+} from "../controllers/paymentController.js";
+
 const router = express.Router();
-const paymentController = require("../controllers/paymentController");
 
-// Get all
-router.get("/", paymentController.getAllPayments);
+router.get("/", getAllPayments);
+router.get("/:id", getPaymentById);
+router.post("/addPayment", addPayment);
+router.put("/:id", updatePayment);
+router.delete("/:id", deletePayment);
 
-// Get by ID
-router.get("/:id", paymentController.getPaymentById);
-
-// Add new
-router.post("/addPayment", paymentController.addPayment);
-
-// Update
-router.put("/:id", paymentController.updatePayment);
-
-// Delete
-router.delete("/:id", paymentController.deletePayment);
-
-module.exports = router;
+export default router;

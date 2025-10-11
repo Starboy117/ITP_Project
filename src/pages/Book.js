@@ -39,66 +39,84 @@ const BookingDetails = () => {
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
+  const validationErrors = validateForm();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+  setErrors({});
+  setLoading(true);
 
-    setLoading(true);
-    const [startTime, endTime] = slot.split(" - ");
-
-    const data = {
-      name,
-      phone: Number(phone),
-      email,
-      courtName,
-      courtType,
-      date: selectedDate,
-      startTime,
-      endTime,
-    };
-
-    try {
-      const res = await fetch(
-        "http://localhost:5000/api/reservations/addBookings",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
-      );
-
-      const result = await res.json();
-      if (res.ok) {
-        navigate("/booking-success", {
-          state: {
-            bookingId: result.bookingId,
-            courtName,
-            courtType,
-            date: selectedDate,
-            slot,
-            name,
-            email,
-            phone,
-            status: result.status,
-          },
-          replace: true,
-        });
-      } else {
-        setErrors({ general: result.error });
-      }
-    } catch (err) {
-      console.error(err);
-      setErrors({ general: "Error connecting to server" });
-    } finally {
-      setLoading(false);
-    }
+  const [startTime, endTime] = slot.split(" - ");
+  const data = {
+    name,
+    phone: Number(phone),
+    email,
+    courtName,
+    courtType,
+    date: selectedDate,
+    startTime,
+    endTime,
+    courtPrice,
+    slot,
   };
+
+  // ✅ Check if booking is for today or tomorrow
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const bookingDate = new Date(selectedDate);
+  bookingDate.setHours(0, 0, 0, 0);
+
+  const diffInDays = (bookingDate - today) / (1000 * 60 * 60 * 24);
+
+  if (diffInDays >= 0 && diffInDays <= 1) {
+    // ✅ Save to localStorage so Payment page can use it
+    localStorage.setItem("latestBooking", JSON.stringify(data));
+    navigate("/pay", { state: data });
+    setLoading(false);
+    return;
+  }
+
+  // ✅ For other future dates → add to database, then go to booking success
+  try {
+    const res = await fetch("http://localhost:5000/api/reservations/addBookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json();
+    if (res.ok) {
+      navigate("/booking-success", {
+        state: {
+          bookingId: result.bookingId,
+          courtName,
+          courtType,
+          courtPrice,
+          date: selectedDate,
+          slot,
+          name,
+          email,
+          phone,
+          status: result.status,
+        },
+        replace: true,
+      });
+    } else {
+      setErrors({ general: result.error });
+    }
+  } catch (err) {
+    console.error(err);
+    setErrors({ general: "Error connecting to server" });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-900 text-white">

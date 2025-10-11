@@ -30,10 +30,6 @@ const addReservation = async (req, res) => {
     }
 
    
-   const phoneRegex = /^[1-9][0-9]{9,14}$/;
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({ error: "Invalid phone number format." });
-    }
 
     const bookingId = await generateBookingId();
     if (!bookingId) return res.status(500).json({ error: "Failed to generate booking ID." });
@@ -222,7 +218,37 @@ const deleteReservation = async (req, res) => {
 
 
 
+// Confirm reservation by bookingId
+const confirmReservation = async (req, res) => {
+  const { bookingId } = req.params;
+
+  try {
+    const reservation = await Reservation.findOneAndUpdate(
+      { bookingId },          // find by custom bookingId
+      { status: "Confirmed" },// update status
+      { new: true }           // return updated document
+    );
+
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
+
+    res.status(200).json({
+      message: "Reservation confirmed successfully",
+      reservation,
+    });
+  } catch (err) {
+    console.error("Error confirming reservation:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
-module.exports = { addReservation, checkReservations, getTodayReservations,getAllReservations, updateReservation, deleteReservation  };
+
+
+
+
+
+
+module.exports = { addReservation, checkReservations, getTodayReservations,getAllReservations, updateReservation, deleteReservation, confirmReservation  };
 

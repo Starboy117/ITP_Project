@@ -12,6 +12,8 @@ import Payments from "./receptionistPages/payments";
 import PaymentPage from "./receptionistPages/payments";
 import InquiryPage from "./pages/InquiryPage/InquiryPage";
 import ManageInquiries from "./pages/InquiryPage/manageInquiries";
+import UserPayment from "./pages/userPayment"
+import PaymentSuccessPage from "./pages/paymentSuccess";
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
         <Route path="/ReceptionistDashboard/reports" element={<Reports />} />
         <Route path="/ReceptionistDashboard/courts" element={<Courts />} />
         <Route path="/ReceptionistDashboard/payments" element={<Payments />} />
+        <Route path="/pay" element={<UserPayment />} />
+        <Route path="/payment-success" element={<PaymentSuccessPage />} />
 
        
         <Route path="/payment" element={<PaymentPage />} />

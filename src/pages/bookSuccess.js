@@ -3,18 +3,57 @@ import { useEffect } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import BookingConfirmationPDF from "../BookingAvailableComponents/BookingConfirmationPDF";
 
-const BookingSuccess = () => {
+const BookingSuccess = ({ currentUser }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bookingId, courtName, courtType, date, slot, name, phone, email, status } = location.state || {};
 
-  const booking = { bookingId, courtName, courtType, date, slot, name, phone, email, status };
+  const {
+    bookingId,
+    courtName,
+    courtType,
+    courtPrice,
+    date,
+    slot,
+    name,
+    phone,
+    email,
+    status,
+  } = location.state || {};
+
+  const booking = {
+    bookingId,
+    userId: currentUser?.id || "U00000", // added userId here
+    courtName,
+    courtType,
+    date,
+    slot,
+    name,
+    phone,
+    email,
+    status,
+    courtPrice,
+  };
 
   const bookingDate = new Date(date);
   const paymentDeadline = new Date(bookingDate);
   paymentDeadline.setDate(paymentDeadline.getDate() - 1);
   const deadlineText = paymentDeadline.toLocaleDateString();
 
+  // ✅ Auto redirect to payment page if booking is today or yesterday
+  useEffect(() => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    const isToday = bookingDate.toDateString() === today.toDateString();
+    const isYesterday = bookingDate.toDateString() === yesterday.toDateString();
+
+    if (isToday || isYesterday) {
+      navigate("/pay", { state: booking });
+    }
+  }, [bookingDate, navigate]);
+
+  // Prevent back navigation to this page
   useEffect(() => {
     const handlePopState = () => navigate("/home", { replace: true });
     window.addEventListener("popstate", handlePopState);
@@ -33,7 +72,9 @@ const BookingSuccess = () => {
           ×
         </button>
 
-        <h1 className="text-4xl font-bold text-green-700 text-center">Booking Confirmed!</h1>
+        <h1 className="text-4xl font-bold text-green-700 text-center">
+          Confirm Booking!
+        </h1>
 
         <div className="space-y-1">
           <p>Booking ID: {bookingId}</p>
@@ -44,7 +85,8 @@ const BookingSuccess = () => {
         </div>
 
         <p className="mt-4 text-red-500 font-semibold text-center">
-          ⚠ Please complete the payment before <strong>{deadlineText}</strong> to avoid cancellation.
+          ⚠ Please complete the payment before{" "}
+          <strong>{deadlineText}</strong> to avoid cancellation.
         </p>
 
         <div className="flex flex-col gap-3 mt-4">
@@ -57,7 +99,11 @@ const BookingSuccess = () => {
           </PDFDownloadLink>
 
           <button
-            onClick={() => navigate("#", { replace: true })}
+            onClick={() =>
+              navigate("/pay", {
+                state: booking, // send the full booking object including userId
+              })
+            }
             className="px-6 py-3 bg-yellow-600 rounded-lg text-white font-semibold shadow-md hover:bg-yellow-700 transition w-full"
           >
             Pay Now

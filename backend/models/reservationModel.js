@@ -13,8 +13,11 @@ const reservationSchema = new mongoose.Schema({
   status: { type: String, required: true, default: "Pending" },
 });
 
-// Model
+
 const Reservation = mongoose.model("Reservation", reservationSchema);
+
+
+
 
 
 async function findBookings(courtName, date) {

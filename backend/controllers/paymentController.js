@@ -1,7 +1,10 @@
-const Payment = require("../models/PaymentModel");
+import Payment from "../models/PaymentModel.js";
+import Stripe from "stripe";
 
-// ✅ Get all payments (always 200, return empty array if none)
-const getAllPayments = async (req, res) => {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// ✅ Get all payments
+export const getAllPayments = async (req, res) => {
   try {
     const payments = await Payment.find();
     return res.status(200).json({ payments }); // empty array is OK
@@ -11,7 +14,7 @@ const getAllPayments = async (req, res) => {
 };
 
 // ✅ Get payment by ID
-const getPaymentById = async (req, res) => {
+export const getPaymentById = async (req, res) => {
   const paymentId = req.params.id;
 
   try {
@@ -25,24 +28,46 @@ const getPaymentById = async (req, res) => {
   }
 };
 
-// ✅ Add new payment (only amount + status from frontend form)
-const addPayment = async (req, res) => {
-  const { amount, status } = req.body;
+
+
+export const addPayment = async (req, res) => {
+  const { amount, currency, userId, bookingId } = req.body;
 
   try {
-    const payment = new Payment({ amount, status });
+    // Stripe expects smallest currency unit (integer)
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(Number(amount) * 100), // convert LKR to cents
+      currency,
+      automatic_payment_methods: { enabled: true },
+    });
+
+    const payment = new Payment({
+      userId,
+      bookingId,
+      amount, // store original LKR value in DB
+      currency,
+      status: "Paid",
+      transactionId: paymentIntent.id,
+    });
+
     const savedPayment = await payment.save();
-    return res.status(201).json({ payment: savedPayment });
+
+    return res.status(201).json({
+      clientSecret: paymentIntent.client_secret,
+      payment: savedPayment,
+    });
   } catch (err) {
-    if (err.name === "ValidationError") {
-      return res.status(400).json({ message: "Validation failed", error: err.message });
-    }
+    console.error("Stripe / MongoDB error:", err);
     return res.status(500).json({ message: "Unable to add payment", error: err.message });
   }
 };
 
+
+
+
+
 // ✅ Update payment by ID
-const updatePayment = async (req, res) => {
+export const updatePayment = async (req, res) => {
   const paymentId = req.params.id;
   const { amount, status } = req.body;
 
@@ -67,7 +92,7 @@ const updatePayment = async (req, res) => {
 };
 
 // ✅ Delete payment by ID
-const deletePayment = async (req, res) => {
+export const deletePayment = async (req, res) => {
   const paymentId = req.params.id;
 
   try {
@@ -81,12 +106,4 @@ const deletePayment = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ message: "Unable to delete payment", error: err.message });
   }
-};
-
-module.exports = {
-  getAllPayments,
-  getPaymentById,
-  addPayment,
-  updatePayment,
-  deletePayment,
 };
