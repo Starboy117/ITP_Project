@@ -1,22 +1,22 @@
 const express = require("express");
-const { protect} = require("../middleware/sessionMiddleware");
+const { protect } = require("../middleware/sessionMiddleware");
 const {
   getUsers,
   getUserProfile,
   editUsers,
-  adminUpdateUser,
-  deleteUsers
+  deleteUsers,
+  updateUserProfile
 } = require("../controllers/userController");
 
 const router = express.Router();
 
-// Admin-only routes
+// Admin-only routes (without middleware for now)
 router.get("/getUsers", getUsers);
 router.put("/editUsers/:id", editUsers);
 router.delete("/deleteUser/:id", deleteUsers);
 
-// User routes (protected but not admin-only)
-// router.get("/profile", protect, getUserProfile);
-// router.put("/profile", protect, updateUserProfile);
+// User profile routes (users updating their own profile)
+router.get("/profile", protect, getUserProfile);
+router.put("/profile", protect, updateUserProfile);
 
 module.exports = router;

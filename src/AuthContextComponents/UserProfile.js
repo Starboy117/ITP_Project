@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './UserProfile.css';
 
 function UserProfile() {
   const { currentUser, updateProfile } = useAuth();
   const [formData, setFormData] = useState({
-    name: currentUser.name || '',
-    email: currentUser.email || '',
-    phone: currentUser.phone || '',
-    address: currentUser.address || {
+    name: '',
+    email: '',
+    phone: '',
+    address: {
       street: '',
       city: '',
       state: '',
@@ -18,6 +18,23 @@ function UserProfile() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Initialize form data when currentUser is available
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        address: currentUser.address || {
+          street: '',
+          city: '',
+          state: '',
+          zip: ''
+        }
+      });
+    }
+  }, [currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,22 +69,27 @@ function UserProfile() {
       if (result.success) {
         setMessage('Profile updated successfully!');
       } else {
-        setError(result.message);
+        setError(result.message || 'Failed to update profile');
       }
     } catch (error) {
       setError('Failed to update profile');
+      console.error('Profile update error:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!currentUser) {
+    return <div className="profile-container">Loading...</div>;
+  }
 
   return (
     <div className="profile-container">
       <div className="profile-card">
         <h2>Your Profile</h2>
         
-        {message && <div className="profile-message">{message}</div>}
-        {error && <div className="profile-error">{error}</div>}
+        {message && <div className="profile-message success">{message}</div>}
+        {error && <div className="profile-message error">{error}</div>}
         
         <form onSubmit={handleSubmit} className="profile-form">
           <div className="form-group">
