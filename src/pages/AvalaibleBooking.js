@@ -118,64 +118,115 @@ function AvailableBooking() {
           Available Courts
         </h1>
 
-        <div className="max-w-2xl mx-auto bg-neutral-800 rounded-2xl shadow-lg p-8">
-          <form className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Court Dropdown */}
-            <div>
-              <label htmlFor="court" className="block text-white mb-2">
-                Choose a Court:
-              </label>
-              <select
-                id="court"
-                value={court}
-                onChange={(e) => setCourt(e.target.value)}
-                className="w-full p-3 rounded-lg bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0097B2] transition"
-              >
-                <option value="all">All Courts</option>
-                {courts
-                  .filter((c) => c.status !== "Maintenance")
-                  .map((c) => (
-                    <option key={c.courtName} value={c.courtName}>
-                      {courtConfig[c.courtName]?.name || c.courtName}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            {/* Date Picker */}
-            <div>
-              <label htmlFor="date" className="block text-white mb-2">
-                Choose a Date:
-              </label>
-              <DatePicker
-                selected={date}
-                onChange={(date) => setDate(date)}
-                minDate={today}
-                maxDate={maxDate}
-                className="w-full p-3 rounded-lg bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0097B2]"
-                placeholderText="Select a date"
-              />
-            </div>
-          </form>
-
-          {/* Selection Display */}
-          {(court || date) && (
-            <div className="mt-8 p-4 w-full bg-gray-900 rounded-lg text-gray-300 flex flex-col gap-2">
-              {court && (
-                <>
-                  {court !== "all" && courtConfig[court]?.icon}
-                  <p>
-                    🏟 Court:{" "}
-                    {court === "all"
-                      ? "All Courts"
-                      : courtConfig[court]?.name || court}
-                  </p>
-                </>
-              )}
-              {date && <p>📅 Date: {date.toDateString()}</p>}
-            </div>
-          )}
+        <div className="max-w-2xl mx-auto bg-neutral-800 rounded-2xl shadow-2xl p-8 border border-neutral-700">
+  <form className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    {/* Court Dropdown */}
+    <div className="space-y-2">
+      <label htmlFor="court" className="block text-white font-semibold text-sm uppercase tracking-wide">
+        Choose a Court
+      </label>
+      <div className="relative">
+        <select
+          id="court"
+          value={court}
+          onChange={(e) => setCourt(e.target.value)}
+          className="w-full p-4 rounded-xl bg-neutral-900 text-white border-2 border-neutral-700 focus:outline-none focus:border-[#0097B2] focus:ring-2 focus:ring-[#0097B2]/20 transition-all duration-300 appearance-none cursor-pointer"
+        >
+          <option value="all" className="bg-neutral-800">All Courts</option>
+          {courts
+            .filter((c) => c.status !== "Maintenance")
+            .map((c) => (
+              <option key={c.courtName} value={c.courtName} className="bg-neutral-800">
+                {courtConfig[c.courtName]?.name || c.courtName}
+              </option>
+            ))}
+        </select>
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+          <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
+      </div>
+    </div>
+
+    {/* Date Picker */}
+    {/* Date Picker */}
+<div className="space-y-2">
+  <label htmlFor="date" className="block text-white font-semibold text-sm uppercase tracking-wide">
+    Choose a Date
+  </label>
+  <div className="relative">
+    <DatePicker
+      selected={date}
+      onChange={(date) => setDate(date)}
+      minDate={today}
+      maxDate={maxDate}
+      className="w-full p-4 rounded-xl bg-neutral-900 text-white border-2 border-neutral-700 focus:outline-none focus:border-[#0097B2] focus:ring-2 focus:ring-[#0097B2]/20 transition-all duration-300 cursor-pointer"
+      placeholderText="Select a date"
+      dateFormat="MMMM d, yyyy"
+      onKeyDown={(e) => e.preventDefault()}
+    />
+    
+    {/* Calendar icon on the right */}
+    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+      <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    </div>
+  </div>
+</div>
+
+  </form>
+
+  {/* Selection Display */}
+  {(court || date) && (
+    <div className="mt-8 p-6 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-xl border-2 border-neutral-700 shadow-lg">
+      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <svg className="w-5 h-5 text-[#0097B2]" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+        Your Selection
+      </h3>
+      
+      <div className="space-y-3">
+        {court && (
+          <div className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg">
+            <div className="w-8 h-8 bg-[#0097B2] rounded-full flex items-center justify-center">
+              {court !== "all" ? (
+                courtConfig[court]?.icon || <span className="text-white text-sm">🏟</span>
+              ) : (
+                <span className="text-white text-sm">🏟</span>
+              )}
+            </div>
+            <div>
+              <p className="text-neutral-400 text-sm">Selected Court</p>
+              <p className="text-white font-semibold">
+                {court === "all" 
+                  ? "All Courts" 
+                  : courtConfig[court]?.name || court
+                }
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {date && (
+          <div className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg">
+            <div className="w-8 h-8 bg-[#0097B2] rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-neutral-400 text-sm">Selected Date</p>
+              <p className="text-white font-semibold">{date.toDateString()}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+</div>
       </div>
 
       {/* Booking Tickets */}
