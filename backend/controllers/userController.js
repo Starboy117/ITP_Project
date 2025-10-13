@@ -2,10 +2,9 @@ const User = require("../models/userModel");
 const Staff = require("../models/staffModel");
 
 // @desc Get all users (Admin only)
-// @desc Get all users (Admin only)
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find(); // exclude passwords
+    const users = await User.find().select("-password"); // exclude passwords
     res.json({
       users,
       count: users.length
@@ -41,10 +40,6 @@ const editUsers = async (req, res) => {
   }
 };
 
-
-
-
-
 // @desc Get user profile
 const getUserProfile = async (req, res) => {
   try {
@@ -60,68 +55,45 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// // @desc Update user profile
-// const updateUserProfile = async (req, res) => {
-//   try {
-//     let user;
-//     if (req.user.type === 'staff') {
-//       user = await Staff.findById(req.user._id);
-//     } else {
-//       user = await User.findById(req.user._id);
-//     }
-    
-//     if (!user) return res.status(404).json({ success: false, message: "User not found" });
+// @desc Update user profile (for users updating their own profile)
+const updateUserProfile = async (req, res) => {
+  try {
+    const { name, email, phone, address } = req.body;
+    const userId = req.user._id; // From session middleware
 
-//     user.name = req.body.name || user.name;
-//     user.email = req.body.email || user.email;
-//     user.phone = req.body.phone || user.phone;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { 
+        name, 
+        email, 
+        phone, 
+        address 
+      },
+      { new: true, runValidators: true }
+    ).select('-password');
 
-//     const updatedUser = await user.save();
-//     res.json({ success: true, user: updatedUser });
-//   } catch (err) {
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// };
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-// // @desc Admin update user
-// const adminUpdateUser = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const updateData = req.body;
-
-//     let user = await User.findById(id);
-//     let userType = 'user';
-
-//     if (!user) {
-//       user = await Staff.findById(id);
-//       userType = 'staff';
-//     }
-
-//     if (!user) return res.status(404).json({ success: false, message: "User not found" });
-
-//     user.name = updateData.name || user.name;
-//     user.email = updateData.email || user.email;
-//     user.phone = updateData.phone || user.phone;
-
-//     if (userType === 'user') {
-//       user.role = updateData.role || user.role;
-//       user.isActive = updateData.isActive !== undefined ? updateData.isActive : user.isActive;
-//       user.membershipType = updateData.membershipType || user.membershipType;
-//     } else {
-//       user.role = updateData.role || user.role;
-//     }
-
-//     const updatedUser = await user.save();
-//     res.json({ success: true, user: updatedUser });
-//   } catch (err) {
-//     console.error("Error updating user:", err);
-//     res.status(500).json({ success: false, message: "Error updating user: " + err.message });
-//   }
-// };
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
 
 // @desc Delete a user
 const deleteUsers = async (req, res) => {
-  const { id } = req.params; // get user ID from URL
+  const { id } = req.params;
 
   try {
     const deleted = await User.findByIdAndDelete(id);
@@ -140,4 +112,10 @@ const deleteUsers = async (req, res) => {
 };
 
 // ✅ Export all functions at once
-module.exports = { getUsers, editUsers, getUserProfile, deleteUsers };
+module.exports = { 
+  getUsers, 
+  editUsers, 
+  getUserProfile, 
+  deleteUsers, 
+  updateUserProfile 
+};

@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(
         "http://localhost:5000/api/auth/register",
         data,
-        { withCredentials: true } // ✅ important for session cookies
+        { withCredentials: true }
       );
       return response.data;
     } catch (err) {
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
       let response = await axios.post(
         "http://localhost:5000/api/staff/login",
         { email, password },
-        { withCredentials: true } // ✅ important
+        { withCredentials: true }
       );
       setCurrentUser(response.data.user);
       localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
         let response = await axios.post(
           "http://localhost:5000/api/auth/login",
           { email, password },
-          { withCredentials: true } // ✅ important
+          { withCredentials: true }
         );
         setCurrentUser(response.data.user);
         localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -76,20 +76,43 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
-  // Update profile example
-  const updateProfile = async (updatedData, currentUserId) => {
-    const payload = { ...updatedData, userId: currentUserId };
-    const response = await fetch('http://localhost:5000/api/users/editUsers', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // ✅ important
-      body: JSON.stringify(payload)
-    });
-    return await response.json();
+  // Update profile
+  const updateProfile = async (formData) => {
+    try {
+      const response = await axios.put(
+        "http://localhost:5000/api/users/profile",
+        formData,
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      
+      if (response.data.success) {
+        // Update current user in context and localStorage
+        setCurrentUser(response.data.user);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      }
+      
+      return response.data;
+    } catch (err) {
+      console.error("Update profile error:", err.response?.data || err.message);
+      return { 
+        success: false, 
+        message: err.response?.data?.message || "Profile update failed" 
+      };
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, loading, register, loginCombined, logout, updateProfile }}>
+    <AuthContext.Provider value={{ 
+      currentUser, 
+      loading, 
+      register, 
+      loginCombined, 
+      logout, 
+      updateProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );
