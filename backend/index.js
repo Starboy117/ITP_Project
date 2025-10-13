@@ -20,6 +20,7 @@ import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import equipmentRoutes from './routes/equipmentRoutes.js';
 import emailRouter from "./routes/emailRoute.js";
 import smsRouter from "./routes/smsRoute.js"
+import reportRoute from "./routes/reportRoute.js"
 
 const app = express();
 
@@ -57,6 +58,8 @@ app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/equipments', equipmentRoutes);
 app.use("/api/email", emailRouter);
 app.use("/api/sms", smsRouter);
+app.use("/api", reportRoute);
+
 
 
 // ===== ERROR HANDLING =====

@@ -61,7 +61,7 @@ const AppWrapper = () => {
   return (
     <>
       <Navbar />
-      <div style={{ paddingTop: isDashboardPage ? `${NAVBAR_HEIGHT}px` : "0px" }}>
+      <div className="bg-neutral-900" style={{ paddingTop: isDashboardPage ? `${NAVBAR_HEIGHT}px` : "0px" }}>
         <Routes>
           {/* Public/User */}
           <Route path="/" element={<Home />} />

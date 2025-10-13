@@ -265,6 +265,11 @@ const cancelBookingById = async (req, res) => {
 
 
 
+
+
+
+
+
 module.exports = {
   addReservation,
   checkReservations,
@@ -275,5 +280,5 @@ module.exports = {
   confirmReservation,
   getUserBookings,
   cancelPendingBookings,
-  cancelBookingById
+  cancelBookingById,
 };
