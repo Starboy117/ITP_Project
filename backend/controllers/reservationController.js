@@ -1,4 +1,5 @@
 const { Reservation, findBookings, findTodayBookings } = require("../models/reservationModel");
+const cron = require("node-cron"); 
 
 // Generate a new booking ID
 async function generateBookingId() {
@@ -205,6 +206,65 @@ const getUserBookings = async (req, res) => {
   }
 };
 
+
+// make sure to import cron at the top
+const cancelPendingBookings = () => {
+  // Run every day at midnight
+  cron.schedule("0 0 * * *", async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + 1); // bookings for tomorrow
+
+    try {
+      const pendingBookings = await Reservation.find({
+        status: "Pending", // match your status in addReservation
+        date: { $gte: targetDate, $lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000) }
+      });
+
+      for (let booking of pendingBookings) {
+        booking.status = "Cancelled";
+        await booking.save();
+        console.log(`Booking ${booking.bookingId} cancelled because payment not done one day before booking date.`);
+      }
+
+      console.log(`Checked and cancelled pending bookings for ${targetDate.toDateString()}.`);
+    } catch (err) {
+      console.error("Error cancelling bookings:", err);
+    }
+  });
+};
+
+
+// Cancel a booking by bookingId
+const cancelBookingById = async (req, res) => {
+  try {
+    const { bookingId } = req.params; // get bookingId from URL
+
+    if (!bookingId) return res.status(400).json({ message: "Booking ID is required." });
+
+    // Find the booking
+    const booking = await Reservation.findOne({ bookingId });
+
+    if (!booking) return res.status(404).json({ message: "Booking not found." });
+
+    // Cancel it
+    booking.status = "Cancelled";
+    await booking.save();
+
+    res.status(200).json({
+      message: `Booking ${bookingId} has been cancelled successfully.`,
+      booking
+    });
+  } catch (err) {
+    console.error("Error cancelling booking:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+
+
 module.exports = {
   addReservation,
   checkReservations,
@@ -213,5 +273,7 @@ module.exports = {
   updateReservation,
   deleteReservation,
   confirmReservation,
-  getUserBookings
+  getUserBookings,
+  cancelPendingBookings,
+  cancelBookingById
 };

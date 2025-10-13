@@ -4,7 +4,7 @@ const reservationSchema = new mongoose.Schema({
   bookingId: { type: String, required: true },
   userId: { type: String, required: true, default: "U000" },
   name: { type: String, required: true },
-  phone: { type: Number, required: true },
+  phone: { type: String, required: true },
   email: { type: String, required: true },
   courtName: { type: String, required: true },
   date: { type: Date, required: true },
@@ -23,7 +23,6 @@ const Reservation = mongoose.model("Reservation", reservationSchema);
 async function findBookings(courtName, date) {
   const inputDate = new Date(date);
 
-  // Force start and end in local time
   const start = new Date(inputDate);
   start.setHours(0, 0, 0, 0);
 
@@ -43,11 +42,15 @@ async function findBookings(courtName, date) {
     });
   }
 
-  return reservations.map(b => ({
-    courtName: b.courtName,
-    slot: `${b.startTime} - ${b.endTime}`
-  }));
+  // Filter out cancelled bookings
+  return reservations
+    .filter(b => b.status !== "Cancelled")
+    .map(b => ({
+      courtName: b.courtName,
+      slot: `${b.startTime} - ${b.endTime}`
+    }));
 }
+
 
 
 async function findTodayBookings(date) {

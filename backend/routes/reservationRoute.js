@@ -8,7 +8,8 @@ const {
   updateReservation, 
   deleteReservation,
   confirmReservation,
-  getUserBookings 
+  getUserBookings, 
+  cancelBookingById
 } = require("../controllers/reservationController");
 
 const { protect } = require("../middleware/sessionMiddleware");
@@ -20,6 +21,9 @@ router.get("/todayReservations", getTodayReservations);
 router.post("/updateReservation/:bookingId", updateReservation);
 router.delete('/deleteReservation/:id', deleteReservation);
 router.patch("/confirmBooking/:bookingId", confirmReservation);
+// Cancel a booking by ID (protected route)
+router.patch("/cancel/:bookingId", cancelBookingById);
+
 
 // ✅ Protected routes
 router.post("/addBookings", protect, addReservation); // add protect middleware

@@ -30,21 +30,42 @@ export const getPaymentById = async (req, res) => {
 
 
 
+
+
 export const addPayment = async (req, res) => {
-  const { amount, currency, userId, bookingId } = req.body;
+  // ✅ Get userId from session
+  const userId = req.session?.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "Not logged in." });
+  }
+
+  const { amount, currency, bookingId } = req.body;
+
+  console.log("AddPayment called with:", { amount, currency, userId, bookingId });
+
+  // ✅ Validate required fields
+  if (!amount || !currency || !bookingId) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
 
   try {
-    // Stripe expects smallest currency unit (integer)
+    // ✅ Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(Number(amount) * 100), // convert LKR to cents
+      amount: Math.round(Number(amount) * 100), // convert to cents
       currency,
       automatic_payment_methods: { enabled: true },
     });
 
+    if (!paymentIntent?.client_secret) {
+      console.error("PaymentIntent creation failed", paymentIntent);
+      return res.status(500).json({ message: "Failed to create PaymentIntent" });
+    }
+
+    // ✅ Save payment record in MongoDB
     const payment = new Payment({
       userId,
       bookingId,
-      amount, // store original LKR value in DB
+      amount,
       currency,
       status: "Paid",
       transactionId: paymentIntent.id,

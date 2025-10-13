@@ -1,40 +1,89 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import PaymentReceiptPDF from "../BookingAvailableComponents/PaymentReceiptPDF"; 
 import BookingConfirmationPDF from "../BookingAvailableComponents/BookingConfirmationPDF";
 import Navbar from "../HomeComponents/Navbar";
 import CopyrightFooter from "../BookingAvailableComponents/CopyrightFooter";
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext"; 
+import axios from "axios";
 
 const PaymentSuccessPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); 
   const [booking, setBooking] = useState(null);
 
+  // ===== Load Booking Data =====
   useEffect(() => {
-    // 1️⃣ Try getting booking from state
-    let bookingData = location.state;
-
-    // 2️⃣ If state is empty (page reload), get from localStorage
-    if (!bookingData) {
-      const savedBooking = localStorage.getItem("latestBooking");
-      if (savedBooking) {
-        bookingData = JSON.parse(savedBooking);
-      }
+    if (!currentUser) {
+      navigate("/login", { replace: true });
+      return;
     }
 
-    // 3️⃣ If still no booking info, redirect to home
+    let bookingData = location.state;
+    if (!bookingData) {
+      const savedBooking = localStorage.getItem("latestBooking");
+      if (savedBooking) bookingData = JSON.parse(savedBooking);
+    }
+
     if (!bookingData || !bookingData.bookingId) {
       navigate("/home", { replace: true });
       return;
     }
 
-    // 4️⃣ Set booking state
     setBooking(bookingData);
-
-    // 5️⃣ Save to localStorage so reload keeps it
     localStorage.setItem("latestBooking", JSON.stringify(bookingData));
-  }, [location.state, navigate]);
+  }, [currentUser, location.state, navigate]);
+
+  // ===== Send Email & SMS Automatically =====
+  useEffect(() => {
+    if (booking && booking.email && booking.phone) {
+      const sendNotifications = async () => {
+        try {
+          // --- Generate Booking PDF ---
+          const bookingPdfBlob = await pdf(
+            <BookingConfirmationPDF booking={{
+              bookingId: booking.bookingId,
+              phone: booking.phone,
+              courtName: booking.courtName,
+              courtType: booking.courtType,
+              date: booking.date,
+              slot: booking.slot,
+              name: booking.name,
+              email: booking.email,
+              status: booking.status,
+            }} />
+          ).toBlob();
+
+          const reader = new FileReader();
+          reader.readAsDataURL(bookingPdfBlob);
+          reader.onloadend = async () => {
+            const base64Pdf = reader.result;
+
+            // --- Send Email ---
+            await axios.post("http://localhost:5000/api/email/send-booking", {
+              email: booking.email,
+              pdf: base64Pdf,
+              bookingId: booking.bookingId
+            });
+            console.log("Booking confirmation email sent!");
+
+            // --- Send SMS ---
+            await axios.post("http://localhost:5000/api/sms/send-sms", {
+              phone: booking.phone.startsWith("+") ? booking.phone : `+${booking.phone}`,
+              message: `Hi ${booking.name}, your booking ${booking.bookingId} for ${booking.date} at ${booking.slot} is confirmed. Check your email for confirmation`
+            });
+            console.log("Booking confirmation SMS sent!");
+          };
+        } catch (err) {
+          console.error("Failed to send notifications:", err);
+        }
+      };
+
+      sendNotifications();
+    }
+  }, [booking]);
 
   if (!booking) return null;
 

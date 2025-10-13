@@ -143,8 +143,34 @@ const deleteCourt = async (req, res) => {
 };
 
 
+// Get court details (including price) by courtName
+const getCourtByName = async (req, res) => {
+  try {
+    const { courtName } = req.params; // get courtName from URL
+    const court = await Court.findOne({ courtName });
+
+    if (!court) {
+      return res.status(404).json({ message: "Court not found" });
+    }
+
+    res.status(200).json({ court });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching court", error: error.message });
+  }
+};
 
 
 
-module.exports = { addCourt,getAllCourts,updateCourt,deleteCourt,getActiveCourts };
+
+
+
+module.exports = {
+  addCourt,
+  getAllCourts,
+  updateCourt,
+  deleteCourt,
+  getActiveCourts,
+  getCourtByName, // ✅ new function
+};
+
 

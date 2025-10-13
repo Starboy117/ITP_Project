@@ -1,7 +1,6 @@
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import Navbar from "../HomeComponents/Navbar";
-import CopyrightFooter from "../BookingAvailableComponents/CopyrightFooter";
+import { useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -11,6 +10,9 @@ import {
   CardExpiryElement,
   CardCvcElement,
 } from "@stripe/react-stripe-js";
+import Navbar from "../HomeComponents/Navbar";
+import CopyrightFooter from "../BookingAvailableComponents/CopyrightFooter";
+import { useAuth } from "../context/AuthContext";
 
 import visaIcon from "../Images/visa.png";
 import mastercardIcon from "../Images/mastercard.png";
@@ -19,16 +21,16 @@ const stripePromise = loadStripe(
   "pk_test_51SBc07Rztq4m6G9LcuW4q2DcAj652L10raNsYy5vFiOwCjxhB6izmxzn78gjscq0m6oa1SFivvJYYQLvocg4NP18005GDKwtAe"
 );
 
-const CheckoutForm = ({ booking }) => {
+const CheckoutForm = ({ booking, currentUser }) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState(booking.email || "");
-  const [cardName, setCardName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [cardBrand, setCardBrand] = useState("");
+  const [email, setEmail] = React.useState(booking.email || "");
+  const [cardName, setCardName] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [errors, setErrors] = React.useState({});
+  const [cardBrand, setCardBrand] = React.useState("");
 
   const cardStyle = {
     style: {
@@ -65,25 +67,54 @@ const CheckoutForm = ({ booking }) => {
     setLoading(true);
 
     try {
-      const amount = Math.round(Number(booking.courtPrice));
+      let bookingId = booking.bookingId;
 
-      // 1️⃣ Create Payment Intent
+      // 🔹 Step 1: Create booking first if not exists (today/tomorrow bookings)
+      if (!bookingId) {
+        const [startTime, endTime] = booking.slot.split(" - ");
+        const res = await fetch("http://localhost:5000/api/reservations/addBookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            userId: currentUser._id,
+            name: booking.name,
+            phone: booking.phone,
+            email: booking.email,
+            courtName: booking.courtName,
+            courtType: booking.courtType,
+            date: booking.date,
+            startTime,
+            endTime,
+            courtPrice: booking.courtPrice,
+            slot: booking.slot,
+          }),
+        });
+
+        const addResult = await res.json();
+        
+        if (!res.ok) throw new Error(addResult.error || "Booking creation failed");
+        bookingId = addResult.bookingId;
+        
+      }
+
+      // 🔹 Step 2: Create PaymentIntent with real bookingId
       const response = await fetch("http://localhost:5000/api/payments/addPayment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
-          amount,
+          amount: booking.courtPrice,
           currency: "lkr",
-          bookingId: booking.bookingId || "temp",
-          userId: booking.userId || "temp",
+          bookingId,
+          userId: currentUser._id,
         }),
       });
 
       const result = await response.json();
-
       if (!result.clientSecret) throw new Error("No clientSecret returned from backend!");
 
-      // 2️⃣ Confirm card payment
+      // 🔹 Step 3: Confirm card payment
       const paymentResult = await stripe.confirmCardPayment(result.clientSecret, {
         payment_method: { card: cardNumber, billing_details: { email, name: cardName } },
       });
@@ -93,50 +124,19 @@ const CheckoutForm = ({ booking }) => {
         return;
       }
 
-      let bookingId = booking.bookingId;
+      // 🔹 Step 4: Confirm booking in DB
+      await fetch(`http://localhost:5000/api/reservations/confirmBooking/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
-      // 3️⃣ For today/yesterday bookings → create DB after payment
-      if (!bookingId) {
-        const [startTime, endTime] = booking.slot.split(" - ");
-        const res = await fetch("http://localhost:5000/api/reservations/addBookings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: booking.name,
-            phone: booking.phone,
-            email: booking.email,
-            courtName: booking.courtName,
-            courtType: booking.courtType,
-            date: booking.date,
-            startTime,
-            endTime,
-          }),
-        });
-
-        const addResult = await res.json();
-        if (res.ok) bookingId = addResult.bookingId;
-        else console.error("Booking creation failed:", addResult.error);
-      }
-
-      // 4️⃣ Confirm booking in DB
-      if (bookingId) {
-        await fetch(`http://localhost:5000/api/reservations/confirmBooking/${bookingId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      // 5️⃣ Save booking data in localStorage for PaymentSuccessPage
-      const finalBooking = {
-        ...booking,
-        bookingId,
-        status: "Confirmed",
-        paymentSuccess: true,
-      };
+      // 🔹 Step 5: Save booking info for success page
+      const finalBooking = { ...booking, bookingId, status: "Confirmed", paymentSuccess: true };
       localStorage.setItem("latestBooking", JSON.stringify(finalBooking));
 
-      // 6️⃣ Navigate to Payment Success
-      navigate("/payment-success");
+      // 🔹 Step 6: Redirect
+      navigate("/payment-success", { state: finalBooking });
     } catch (err) {
       console.error("Payment failed:", err);
       setErrors({ general: err.message });
@@ -151,12 +151,12 @@ const CheckoutForm = ({ booking }) => {
         <img
           src={visaIcon}
           alt="Visa"
-          className={`w-16 h-16 md:w-20 md:h-12 ${cardBrand === "visa" ? "opacity-100" : "opacity-30"}`}
+          className={`w-16 h-16 md:w-20 md:h-20 ${cardBrand === "visa" ? "opacity-100" : "opacity-30"}`}
         />
         <img
           src={mastercardIcon}
           alt="MasterCard"
-          className={`w-16 h-16 md:w-20 md:h-12 ${cardBrand === "mastercard" ? "opacity-100" : "opacity-30"}`}
+          className={`w-16 h-16 md:w-20 md:h-20 ${cardBrand === "mastercard" ? "opacity-100" : "opacity-30"}`}
         />
       </div>
 
@@ -221,11 +221,20 @@ const CheckoutForm = ({ booking }) => {
 const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const booking = location.state || {};
 
+  console.log(booking);
+
   useEffect(() => {
+    if (!currentUser) {
+      navigate("/login", { replace: true });
+      return;
+    }
     if (!booking.courtName) navigate("/available", { replace: true });
-  }, [booking, navigate]);
+  }, [booking, currentUser, navigate]);
+
+  if (!currentUser) return null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 text-white">
@@ -240,10 +249,6 @@ const PaymentPage = () => {
               <li className="flex justify-between">
                 <span>Court:</span>
                 <span className="font-semibold">{booking.courtName}</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Type:</span>
-                <span className="font-semibold">{booking.courtType}</span>
               </li>
               <li className="flex justify-between">
                 <span>Date:</span>
@@ -265,7 +270,7 @@ const PaymentPage = () => {
               Payment Details
             </h2>
             <Elements stripe={stripePromise}>
-              <CheckoutForm booking={booking} />
+              <CheckoutForm booking={booking} currentUser={currentUser} />
             </Elements>
           </div>
         </div>

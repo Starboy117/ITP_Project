@@ -3,6 +3,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import { sessionMiddleware } from './middleware/sessionMiddleware.js';
+import { cancelPendingBookings } from './controllers/reservationController.js'; // adjust path
+
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -16,6 +18,8 @@ import inquiryRoutes from './routes/inquiryRoutes.js';
 import shopRoutes from './routes/shopRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import equipmentRoutes from './routes/equipmentRoutes.js';
+import emailRouter from "./routes/emailRoute.js";
+import smsRouter from "./routes/smsRoute.js"
 
 const app = express();
 
@@ -51,6 +55,9 @@ app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/equipments', equipmentRoutes);
+app.use("/api/email", emailRouter);
+app.use("/api/sms", smsRouter);
+
 
 // ===== ERROR HANDLING =====
 app.use((error, req, res, next) => {
@@ -80,6 +87,8 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+      cancelPendingBookings();
     });
 
   } catch (error) {
