@@ -106,7 +106,6 @@ const CheckoutForm = ({ booking, currentUser }) => {
         body: JSON.stringify({
           amount: booking.courtPrice,
           currency: "lkr",
-          bookingId,
           userId: currentUser._id,
         }),
       });

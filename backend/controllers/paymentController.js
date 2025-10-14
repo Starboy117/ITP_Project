@@ -39,12 +39,12 @@ export const addPayment = async (req, res) => {
     return res.status(401).json({ error: "Not logged in." });
   }
 
-  const { amount, currency, bookingId } = req.body;
+  const { amount, currency } = req.body;
 
-  console.log("AddPayment called with:", { amount, currency, userId, bookingId });
+  console.log("AddPayment called with:", { amount, currency, userId });
 
   // ✅ Validate required fields
-  if (!amount || !currency || !bookingId) {
+  if (!amount || !currency) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
@@ -64,7 +64,6 @@ export const addPayment = async (req, res) => {
     // ✅ Save payment record in MongoDB
     const payment = new Payment({
       userId,
-      bookingId,
       amount,
       currency,
       status: "Paid",
@@ -82,7 +81,6 @@ export const addPayment = async (req, res) => {
     return res.status(500).json({ message: "Unable to add payment", error: err.message });
   }
 };
-
 
 
 

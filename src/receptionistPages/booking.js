@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { PlusIcon, MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+} from "@heroicons/react/24/outline";
 import BookingModal from "../staffPageComponents/BookingModel";
 import Sidebar from "../staffPageComponents/sideBar";
 
@@ -21,11 +25,15 @@ const Bookings = () => {
     return (
       <div
         className={`fixed top-5 right-5 px-4 py-3 rounded shadow-lg z-50 transition-all duration-300 ${
-          type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
+          type === "success"
+            ? "bg-green-600 text-white"
+            : "bg-red-600 text-white"
         }`}
       >
         <span>{message}</span>
-        <button className="ml-4 font-bold" onClick={onClose}>X</button>
+        <button className="ml-4 font-bold" onClick={onClose}>
+          X
+        </button>
       </div>
     );
   };
@@ -44,12 +52,21 @@ const Bookings = () => {
       if (selectedBooking) {
         response = await fetch(
           `http://localhost:5000/api/reservations/updateReservation/${selectedBooking._id}`,
-          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) }
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          }
         );
       } else {
         response = await fetch(
           "http://localhost:5000/api/reservations/addBookings",
-          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) }
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+            credentials: "include", // <--- include cookies/session
+          }
         );
       }
 
@@ -58,7 +75,9 @@ const Bookings = () => {
       if (response.ok) {
         const bookingData = data.reservation || data;
         if (selectedBooking) {
-          setBookings((prev) => prev.map((b) => (b._id === selectedBooking._id ? bookingData : b)));
+          setBookings((prev) =>
+            prev.map((b) => (b._id === selectedBooking._id ? bookingData : b))
+          );
           showNotification("Booking updated successfully!", "success");
         } else {
           setBookings((prev) => [...prev, bookingData]);
@@ -78,7 +97,9 @@ const Bookings = () => {
   useEffect(() => {
     const fetchAllBookings = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/reservations/getAllReservation");
+        const response = await fetch(
+          "http://localhost:5000/api/reservations/getAllReservation"
+        );
         const data = await response.json();
         setBookings(data.reservations || []);
         setCount(data.count || 0);
@@ -99,7 +120,8 @@ const Bookings = () => {
       booking.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.courtName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
-      filterStatus === "all" || booking.status?.toLowerCase() === filterStatus.toLowerCase();
+      filterStatus === "all" ||
+      booking.status?.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -130,13 +152,21 @@ const Bookings = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setBookings((prev) => prev.filter((b) => b._id !== bookingToDelete._id));
-        showNotification(data.message || "Booking deleted successfully!", "success");
+        setBookings((prev) =>
+          prev.filter((b) => b._id !== bookingToDelete._id)
+        );
+        showNotification(
+          data.message || "Booking deleted successfully!",
+          "success"
+        );
       } else {
         showNotification(data.message || "Failed to delete booking.", "error");
       }
     } catch (error) {
-      showNotification(error.message || "Server error while deleting booking.", "error");
+      showNotification(
+        error.message || "Server error while deleting booking.",
+        "error"
+      );
     } finally {
       setBookingToDelete(null);
       setShowDeleteModal(false);
@@ -166,7 +196,9 @@ const Bookings = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
             <h2 className="text-2xl font-bold">Bookings Management</h2>
-            <p className="mt-1 text-sm text-gray-400">Manage all court bookings and reservations</p>
+            <p className="mt-1 text-sm text-gray-400">
+              Manage all court bookings and reservations
+            </p>
           </div>
           <button
             onClick={handleNewBooking}
@@ -214,13 +246,24 @@ const Bookings = () => {
             <tbody className="bg-neutral-800 divide-y divide-neutral-700">
               {filteredReservations.map((b) => (
                 <tr key={b._id} className="hover:bg-neutral-700">
-                  <td className="px-6 py-4 text-sm font-medium text-white">{b.bookingId}</td>
-                  <td className="px-6 py-4 text-sm text-gray-400">{b.name || "-"}</td>
-                  <td className="px-6 py-4 text-sm text-gray-400">{b.email || "-"}</td>
-                  <td className="px-6 py-4 text-sm text-gray-400">{b.phone || "-"}</td>
-                  <td className="px-6 py-4 text-sm text-gray-400">{b.courtName || "-"}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-white">
+                    {b.bookingId}
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-400">
-                    {b.date ? new Date(b.date).toLocaleDateString() : "-"} • {b.startTime || "-"} - {b.endTime || "-"}
+                    {b.name || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-400">
+                    {b.email || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-400">
+                    {b.phone || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-400">
+                    {b.courtName || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-400">
+                    {b.date ? new Date(b.date).toLocaleDateString() : "-"} •{" "}
+                    {b.startTime || "-"} - {b.endTime || "-"}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <span
@@ -236,10 +279,16 @@ const Bookings = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-medium flex gap-2 justify-end">
-                    <button onClick={() => handleEditBooking(b)} className="text-blue-400 hover:text-blue-300">
+                    <button
+                      onClick={() => handleEditBooking(b)}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
                       Edit
                     </button>
-                    <button onClick={() => confirmDeleteBooking(b)} className="text-red-500 hover:text-red-400">
+                    <button
+                      onClick={() => confirmDeleteBooking(b)}
+                      className="text-red-500 hover:text-red-400"
+                    >
                       Delete
                     </button>
                   </td>
@@ -262,9 +311,12 @@ const Bookings = () => {
         {showDeleteModal && bookingToDelete && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-neutral-900 p-6 rounded-lg w-full max-w-sm text-center">
-              <h2 className="text-xl font-bold mb-4 text-white">Delete Booking?</h2>
+              <h2 className="text-xl font-bold mb-4 text-white">
+                Delete Booking?
+              </h2>
               <p className="mb-6 text-gray-300">
-                Are you sure you want to delete booking for <strong>{bookingToDelete.name}</strong>?
+                Are you sure you want to delete booking for{" "}
+                <strong>{bookingToDelete.name}</strong>?
               </p>
               <div className="flex justify-center gap-4">
                 <button

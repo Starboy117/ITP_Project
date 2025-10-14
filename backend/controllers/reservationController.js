@@ -14,13 +14,13 @@ async function generateBookingId() {
 // Add a new reservation
 const addReservation = async (req, res) => {
   try {
-    // ✅ Get userId from session instead of request body
+    // ✅ Get userId from session
     const userId = req.session?.userId;
     if (!userId) return res.status(401).json({ error: "Not logged in." });
 
     const { name, phone, email, courtName, date, startTime, endTime, status } = req.body;
 
-    // ✅ Validate inputs
+    // === Validate inputs ===
     if (!name) return res.status(400).json({ error: "Name is required." });
     if (!phone) return res.status(400).json({ error: "Phone number is required." });
     if (!email) return res.status(400).json({ error: "Email is required." });
@@ -32,22 +32,38 @@ const addReservation = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return res.status(400).json({ error: "Invalid email format." });
 
-    // ✅ Generate booking ID
+    // === Prevent double booking ===
+    const bookingDate = new Date(date);
+    const startOfDay = new Date(bookingDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(bookingDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existing = await Reservation.findOne({
+      courtName: { $regex: new RegExp(`^${courtName}$`, "i") }, // case-insensitive
+      startTime: startTime.trim(),
+      date: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    if (existing)
+      return res.status(400).json({ error: "This court is already booked at that time." });
+
+    // === Generate booking ID ===
     const bookingId = await generateBookingId();
     if (!bookingId) return res.status(500).json({ error: "Failed to generate booking ID." });
 
-    // ✅ Create reservation
+    // === Create reservation ===
     const reservation = new Reservation({
       bookingId,
-      userId, // from session
+      userId,
       name,
       phone,
       email,
       courtName,
-      date,
-      startTime,
-      endTime,
-      status: status || "Pending"
+      date: bookingDate,
+      startTime: startTime.trim(),
+      endTime: endTime.trim(),
+      status: status || "Pending",
     });
 
     const savedReservation = await reservation.save();
@@ -58,6 +74,7 @@ const addReservation = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 // Get all reservations
@@ -104,46 +121,56 @@ const updateReservation = async (req, res) => {
     const { bookingId } = req.params;
     const { name, email, phone, courtName, date, startTime, endTime, status } = req.body;
 
+    // === Validate inputs ===
     if (!bookingId) return res.status(400).json({ error: "Reservation ID is required." });
     if (!name || !email || !phone || !courtName || !date || !startTime || !endTime)
       return res.status(400).json({ error: "All fields are required." });
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return res.status(400).json({ error: "Invalid email format." });
+    if (!emailRegex.test(email))
+      return res.status(400).json({ error: "Invalid email format." });
 
-    const phoneRegex = /^[0-9]{7,15}$/;
-    if (!phoneRegex.test(phone)) return res.status(400).json({ error: "Phone number must be 7–15 digits." });
-
+    // === Validate date ===
     const bookingDate = new Date(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (isNaN(bookingDate.getTime()) || bookingDate < today)
       return res.status(400).json({ error: "Date must be today or in the future." });
 
+    // === Check if reservation exists ===
     const reservation = await Reservation.findById(bookingId);
-    if (!reservation) return res.status(404).json({ error: "Reservation not found." });
+    if (!reservation)
+      return res.status(404).json({ error: "Reservation not found." });
+
+    // === Prevent double booking ===
+    const startOfDay = new Date(bookingDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(bookingDate);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const existing = await Reservation.findOne({
       _id: { $ne: bookingId },
-      date,
-      courtName,
-      startTime,
+      courtName: { $regex: new RegExp(`^${courtName}$`, "i") }, // case-insensitive match
+      startTime: startTime.trim(),
+      date: { $gte: startOfDay, $lte: endOfDay },
     });
 
-    if (existing) return res.status(400).json({ error: "This court is already booked at that time." });
+    if (existing)
+      return res.status(400).json({ error: "This court is already booked at that time." });
 
-    // Update fields
+    // === Update reservation fields ===
     reservation.name = name;
     reservation.email = email;
     reservation.phone = phone;
     reservation.courtName = courtName;
-    reservation.date = date;
+    reservation.date = bookingDate;
     reservation.startTime = startTime;
     reservation.endTime = endTime;
     reservation.status = status || reservation.status;
 
     const updatedReservation = await reservation.save();
 
+    // === Success Response ===
     res.status(200).json({
       message: "Reservation updated successfully.",
       reservation: updatedReservation,
@@ -154,6 +181,7 @@ const updateReservation = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 // Delete reservation
 const deleteReservation = async (req, res) => {
